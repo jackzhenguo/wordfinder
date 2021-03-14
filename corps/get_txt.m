@@ -4,9 +4,9 @@
 % Mail : goto.champion@gmail.com
 % Blog : kang.blog.com
 %% -------------------------------------------------------------------
-website = 'https://www.gutenberg.org/browse/scores/top'; % the website you wanna crawling
-filetypes = {'txt'}; % the file your wanna download during crawling
-downloadPath = 'C:\Users\wilje\OneDrive\Saint Louis University\Courses\Spring 2021\Principles of Software Development\_WordFinder\wordfinder\corpus\gut_dat'; % where to download
+website = 'https://www.gutenberg.org/browse/scores/top'; % the website you want crawling
+filetypes = {'txt'}; % file type of downloads during crawling
+downloadPath = <path to save downloaded .txt files>; % where to download
 if ~isdir(downloadPath)
     mkdir(downloadPath);
 end
