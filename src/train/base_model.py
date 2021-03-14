@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 
 from typing import List
 
-from result_model import TResult
+from src.train.result_model import TResult
 
 
 class ITrain(metaclass=ABCMeta):
