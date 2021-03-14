@@ -37,7 +37,7 @@ def train_model(language_name, corpus_path, udpipe_model: UdpipeTrain):
     print('save succeed')
 
 
-def load_model(language_name):
+def load_model(language_name) -> gensim.models.Word2Vec:
     """load model we have trained
     :param language_name:
     :return: word2vec model we have trained

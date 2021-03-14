@@ -6,11 +6,14 @@ import json
 from typing import List
 import sys
 import os
+import numpy as np
+from sklearn.cluster import KMeans
 
 from src.train.result_model import TResult
 from src.train.store import StoreData
 from src.util import language_dict, language_list, db_config
 from src.train.train_cluster import load_model
+from src.train.train_model import UdpipeTrain
 
 try:
     store_data = StoreData(db_config['user'],
@@ -56,25 +59,51 @@ class AppService(object):
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
         self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
 
-    def cluster_sentences(self, language_name: str, sentences: List[str], n_cluster) -> List[str]:
+    def cluster_sentences(self, language_name: str, sentences: List[str], n_cluster: int,
+                          udpipeTrain: UdpipeTrain, word2vec_dimn = 100) -> List[str]:
         """
         cluster sentences to get examples
         :param language_name:
         :param sentences:
         :param n_cluster:
+        :param udpipeTrain: UdpipeTrain
+        :param word2vec_dimn: dimension for embedding vector, default 100 for gensim
         :return:
         """
-        pass
+        # first loading model
+        word2vec_model = load_model(language_name)
+        # second geting vectors for one sentence
+        sent_vectors = []
+        # iterator to sentence
+        for sent in sentences:
+            words = udpipeTrain.word_segmentation(sent)
+            word_vectors = []
+            # iterator to word
+            for word in words:
+                if word in word2vec_model.wv:
+                    word_vectors.append(word2vec_model.wv[word])
+                else:  # not in dict, fill 0
+                    word_vectors.append([0] * word2vec_dimn)
 
+            to_array = np.array(word_vectors)
+            sent_vectors.append(to_array.mean(axis=0))
+
+        # third using kmeans to cluster
 
 
 if __name__ == "__main__":
     # get word vector for one sentence
     language_name = 'English'
-    sentences = ['Tohru shows great loyalty to whoever he stands by, even back to the time when he was an Enforcer for the Dark Hand.',
-                 'The Earth Demon, Dai Gui resembles a large minotaur(with the face of a guardian lion) with great strength.',
-                 'Al Mulock was the great-grandson of Sir William Mulock(1843–1944), the former Canadian Postmaster - General.',
-                 'Though his surviving images are scarce, his importance to the early history of photography in Asia is great.']
+    sentences = [
+        'Tohru shows great loyalty to whoever he stands by, even back to the time when he was an Enforcer for the Dark Hand.',
+        'The Earth Demon, Dai Gui resembles a large minotaur(with the face of a guardian lion) with great strength.',
+        'Al Mulock was the great-grandson of Sir William Mulock(1843–1944), the former Canadian Postmaster - General.',
+        'Though his surviving images are scarce, his importance to the early history of photography in Asia is great.']
 
-    cluster_result = AppService().cluster_sentences(language_name, sentences, 2)
+    # first loading udpipe to segement word for each sentence
+    udt_english = UdpipeTrain(language_list[1],
+                              '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
+                              '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+
+    cluster_result = AppService().cluster_sentences(language_name, sentences, 2, udt_english)
     print(cluster_result)
