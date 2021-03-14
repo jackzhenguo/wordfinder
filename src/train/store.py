@@ -8,9 +8,9 @@ import pymysql
 from typing import List
 
 # import modules we define
-from wordfinder.src.train.result_model import TResult
-from wordfinder.src.util import db_config
-from wordfinder.src.util import language_dict
+from src.train.result_model import TResult
+from src.util import db_config
+from src.util import language_dict
 
 
 class StoreData(object):

@@ -5,7 +5,7 @@ from gensim import utils
 import gensim.models
 import tempfile
 
-from wordfinder.src.train.train_model import UdpipeTrain
+from src.train.train_model import UdpipeTrain
 
 
 class ClusterModel(object):

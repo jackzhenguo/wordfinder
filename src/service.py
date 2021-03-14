@@ -1,12 +1,16 @@
 # This module provides service functionality to app.py
+# working directory is src folder.
 
 from collections import defaultdict
 import json
 from typing import List
+import sys
+import os
 
-from wordfinder.src.train.result_model import TResult
-from wordfinder.src.train.store import StoreData
-from wordfinder.src.util import language_dict, language_list, db_config
+from src.train.result_model import TResult
+from src.train.store import StoreData
+from src.util import language_dict, language_list, db_config
+from src.train.train_cluster import load_model
 
 try:
     store_data = StoreData(db_config['user'],
@@ -61,3 +65,16 @@ class AppService(object):
         :return:
         """
         pass
+
+
+
+if __name__ == "__main__":
+    # get word vector for one sentence
+    language_name = 'English'
+    sentences = ['Tohru shows great loyalty to whoever he stands by, even back to the time when he was an Enforcer for the Dark Hand.',
+                 'The Earth Demon, Dai Gui resembles a large minotaur(with the face of a guardian lion) with great strength.',
+                 'Al Mulock was the great-grandson of Sir William Mulock(1843–1944), the former Canadian Postmaster - General.',
+                 'Though his surviving images are scarce, his importance to the early history of photography in Asia is great.']
+
+    cluster_result = AppService().cluster_sentences(language_name, sentences, 2)
+    print(cluster_result)

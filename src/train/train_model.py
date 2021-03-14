@@ -7,10 +7,10 @@ from corpy.udpipe import pprint
 from typing import List
 import re
 # we define modules
-from base_model import ITrain
-from result_model import TResult
-from store import StoreData
-from wordfinder.src.util import language_list, db_config
+from src.train.base_model import ITrain
+from src.train.result_model import TResult
+from src.train.store import StoreData
+from src.util import language_list, db_config
 
 
 class UdpipeTrain(ITrain):
