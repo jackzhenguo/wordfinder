@@ -1,7 +1,17 @@
+from typing import Any
+
 from flask import Flask, render_template, request, redirect, url_for, flash
-from instance import language_dict
+from collections import defaultdict
+import json
+
+from wordfinder.src.train.result_model import TResult
+from wordfinder.src.train.store import StoreData
+from wordfinder.src.util import language_dict, language_list, db_config
+from wordfinder.src.service import AppService
 
 app = Flask(__name__)
+
+appService = AppService()
 
 
 @app.route('/')
@@ -24,28 +34,27 @@ def find():
     finally, render to result.html
     :return: result.html
     """
+    language_name, sel_word = None, None
     if request.method == 'POST':
         language_id = request.form['sellanguage']
         sel_word = request.form['selword']
         language_name = language_dict[language_id]
-        # select by database
-        # TODO
-        # demo result
-        sel_result = (("sink", "NOUN", "Don't just leave your dirty plates in the sink!"),
-                      ("sink", "VERB", "The wheels started to sink into the mud."),
-                      ("sink", "VERB", "How could you sink so low?"))
-        # analysis
-        # groupby column0 and column1
-        # care: type of third element for result_dict is a list
-        sel_result2 = (("sink", "NOUN", ["Don't just leave your dirty plates in the sink!"]),
-                       ("sink", "VERB", ["The wheels, started to sink into the mud.", "How could you sink so low?"]))
-
-        global sel_dict
-        sel_dict = {"NOUN": ["Don't just leave your dirty plates in the sink!"],
-                    "VERB": ["The wheels, started to sink into the mud.", "How could you sink so low?"]}
+        appService.find_service(language_name, sel_word)
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": sel_result2})
+                                                      "sel_result": appService.sel_result})
+
+
+@app.route('/find2', methods=['POST'])
+def find2():
+    language_name, sel_word = None, None
+    if request.method == 'POST':
+        language_name = request.form['sellanguage']
+        sel_word = request.form['selword']
+        appService.find_service(language_name, sel_word)
+    return render_template('result.html', input_data={"language_name": language_name,
+                                                      "sel_word": sel_word,
+                                                      "sel_result": appService.sel_result})
 
 
 @app.route('/cluster', methods=['POST'])
@@ -60,12 +69,12 @@ def cluster():
     if request.method == 'POST':
         cluster_number = request.form['clusterNumber']
         sel_tag = request.form['tagInput1']
-        cluster_input_sentence = sel_dict[sel_tag]
+        cluster_input_sentence = appService.pos_dict[sel_tag]
         # add cluster
         # TODO
         # demo method
         cluster_result = [cluster_input_sentence[0]]
-        return render_template('cluster.html', cluster_number=cluster_number, cluster_result=cluster_result);
+        return render_template('cluster.html', cluster_number=cluster_number, cluster_result=cluster_result)
 
 
 if __name__ == '__main__':
