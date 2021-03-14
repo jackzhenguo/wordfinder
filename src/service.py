@@ -59,13 +59,13 @@ class AppService(object):
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
         self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
 
-    def cluster_sentences(self, language_name: str, sentences: List[str], n_cluster: int,
+    def cluster_sentences(self, language_name: str, sentences: List[str], n_clusters: int,
                           udpipeTrain: UdpipeTrain, word2vec_dimn = 100) -> List[str]:
         """
         cluster sentences to get examples
         :param language_name:
         :param sentences:
-        :param n_cluster:
+        :param n_clusters:
         :param udpipeTrain: UdpipeTrain
         :param word2vec_dimn: dimension for embedding vector, default 100 for gensim
         :return:
@@ -89,6 +89,17 @@ class AppService(object):
             sent_vectors.append(to_array.mean(axis=0))
 
         # third using kmeans to cluster
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(sent_vectors)
+        labels = kmeans.labels_
+        # fourth select one sentence with each label
+        tmp_labels, examples = [], []
+        for sent, label in zip(sentences, labels):
+            if label not in tmp_labels:
+                tmp_labels.append(label)
+                examples.append(sent)
+            if len(examples) == n_clusters:
+                break
+        return examples
 
 
 if __name__ == "__main__":
@@ -106,4 +117,5 @@ if __name__ == "__main__":
                               '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
 
     cluster_result = AppService().cluster_sentences(language_name, sentences, 2, udt_english)
+    print("two examples sentences: \n")
     print(cluster_result)
