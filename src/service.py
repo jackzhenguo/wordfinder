@@ -32,6 +32,16 @@ class AppService(object):
     def __init__(self):
         self.pos_dict = None
         self.sel_result = None
+        self.udt_pre_model = None
+
+    def config_udpipe(self, language_name):
+        # first loading udpipe to segement word for each sentence
+        # TODO: once getting language_name, then to find the related udpipe and corpus
+        # all these need to be at preprocessed level
+        self.udt_pre_model = UdpipeTrain(language_name,
+                                         '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
+                                         '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+        return self
 
     def find_service(self, language_name: str, sel_word: str):
         """This method get results from database by specified language_name and input word
@@ -59,37 +69,35 @@ class AppService(object):
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
         self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
 
-    def cluster_sentences(self, language_name: str, sentences: List[str], n_clusters: int,
-                          udpipeTrain: UdpipeTrain, word2vec_dimn = 100) -> List[str]:
+    def cluster_sentences(self, language_name: str, sentences: List[str], n_clusters: int) -> List[str]:
         """
         cluster sentences to get examples
         :param language_name:
         :param sentences:
         :param n_clusters:
-        :param udpipeTrain: UdpipeTrain
-        :param word2vec_dimn: dimension for embedding vector, default 100 for gensim
         :return:
         """
         # first loading model
         word2vec_model = load_model(language_name)
         # second geting vectors for one sentence
         sent_vectors = []
+        default_dimn = 100
         # iterator to sentence
         for sent in sentences:
-            words = udpipeTrain.word_segmentation(sent)
+            words = self.udt_pre_model.word_segmentation(sent)
             word_vectors = []
             # iterator to word
             for word in words:
                 if word in word2vec_model.wv:
                     word_vectors.append(word2vec_model.wv[word])
                 else:  # not in dict, fill 0
-                    word_vectors.append([0] * word2vec_dimn)
+                    word_vectors.append([0] * default_dimn)
 
             to_array = np.array(word_vectors)
-            sent_vectors.append(to_array.mean(axis=0))
+            sent_vectors.append(to_array.mean(axis=0).tolist())
 
         # third using kmeans to cluster
-        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(sent_vectors)
+        kmeans = KMeans(n_clusters=int(n_clusters), random_state=0).fit(sent_vectors)
         labels = kmeans.labels_
         # fourth select one sentence with each label
         tmp_labels, examples = [], []
@@ -116,6 +124,6 @@ if __name__ == "__main__":
                               '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
                               '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
 
-    cluster_result = AppService().cluster_sentences(language_name, sentences, 2, udt_english)
+    cluster_result = AppService().config_udpipe(language_name).cluster_sentences(language_name, sentences, 2)
     print("two examples sentences: \n")
     print(cluster_result)
