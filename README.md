@@ -135,4 +135,83 @@ Sprint 1
 3. Clean the Corpus(Tokenization, lemmatization and stemming)
 4. Tag the data according the POS
 
-# wordfinder
+
+
+Sprint 2
+
+Discussion list:
+
+1. discuss NLTK and UDpipe, key is multiple language support
+
+2. corpus for 7-8 languages need to decide
+
+  3 load UDpipe pre-train model, then train our corpus of 2
+
+  4 let result write to our database, and core fields: word , POS tag,  sentence
+
+  5  cluster sentences to get example sentences.
+
+![big task steps](assets/big-task-1.png)
+
+
+
+### Done list:
+ User interface
+ English corpora
+ POS Tag
+
+### To do list:
+ Decide NLTK or CorPy
+ Multilingual functionality 
+ Start writing to csv to build database structure
+
+### mysql
+
+# view all tables of a database, here called mysql database
+
+select table_name from information_schema.tables where table_schema='mysql';
+
+
+### sprint 2: review
+
+new features:
+
+1. finish development of POS tag, based on udpipe pre-train model, available to multiple languages, including:
+  - base_model.py
+  - train_model.py
+  - base data structure: result_model.py
+
+2. finish application for database at hopper.slu.edu, which hosts our web servers and database store. Our train can be put on this server to keep running all time.
+
+3. finish development for mysql store model, and the module is store.py 
+
+
+unfinished features:
+
+1. corpus for many other languages
+2. cluster 
+
+
+Sprint #3 planning
+- 1 methods to get corpus for many languages
+    - 1.1 wikipedia : language abbreviation: https://zh.wikipedia.org/wiki/ISO_639-1
+    - 1.2 how to get via wikipedia https://jdhao.github.io/2019/01/10/two_chinese_corpus/
+        
+2. database, tables structures
+    - current tables structure
+    - wordpos table and sentence table
+    
+    updating and cleaning the database all the time
+    
+3. add cluster function by word2vec
+   the gensim library can do it
+
+4. web interfaces update
+
+5. add logging
+
+6. test task, cleaning the database
+
+7. deploy to hopper.slu.edu
+
+8. alpha version release
