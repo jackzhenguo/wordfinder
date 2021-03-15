@@ -203,14 +203,14 @@ Sprint #3 planning
     
     updating and cleaning the database all the time
     
-3. add cluster function by word2vec
-   the gensim library can do it
+3. add cluster function by word2vec 
+   the gensim library can do it @Zhen Guo
 
-4. web interfaces update
+4. on web interfaces we should add the show for cluster task @Zhen Guo
 
-5. add logging
+5. add logging for every key step
 
-6. test task, cleaning the database
+6. test task, cleaning the database @Willie @Haris 
 
 7. deploy to hopper.slu.edu
 
