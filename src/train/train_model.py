@@ -169,7 +169,9 @@ if __name__ == '__main__':
     # Chinese
     # have done
     udt_chinese = UdpipeTrain(language_list[0],
-                              '/home/zglg/SLU/psd/pre-model/chinese-gsdsimp-ud-2.5-191206.udpipe',
+                             # need to start using different file paths 
+                             # or just checking for file in directory
+                              '/home/zglg/SLU/psd/pre-model/chinese-gsdsimp-ud-2.5-191206.udpipe', 
                               '/home/zglg/SLU/psd/corpus/chinese/平凡的世界.txt')
 
     # English
