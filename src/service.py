@@ -69,16 +69,22 @@ class AppService(object):
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
         self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
 
-    def cluster_sentences(self, language_name: str, sentences: List[str], n_clusters: int) -> List[str]:
+    def cluster_sentences(self, language_name: str, save_path: str, sentences: List[str], n_clusters: int) -> List[str]:
         """
         cluster sentences to get examples
         :param language_name:
+        :param save_path: the saved path for our cluster model trained well
         :param sentences:
         :param n_clusters:
         :return:
         """
+        n_clusters = int(n_clusters)
+        if n_clusters > len(sentences):
+            # TODO add log
+            print('number of cluster bigger than sentences count')
+            return
         # first loading model
-        word2vec_model = load_model(language_name)
+        word2vec_model = load_model(save_path)
         # second geting vectors for one sentence
         sent_vectors = []
         default_dimn = 100
@@ -97,7 +103,7 @@ class AppService(object):
             sent_vectors.append(to_array.mean(axis=0).tolist())
 
         # third using kmeans to cluster
-        kmeans = KMeans(n_clusters=int(n_clusters), random_state=0).fit(sent_vectors)
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(sent_vectors)
         labels = kmeans.labels_
         # fourth select one sentence with each label
         tmp_labels, examples = [], []
@@ -107,6 +113,14 @@ class AppService(object):
                 examples.append(sent)
             if len(examples) == n_clusters:
                 break
+        # add bottom logic for cluster
+        if len(examples) < n_clusters:
+            for sent in sentences:
+                if sent not in examples:
+                    examples.append(sent)
+                if len(examples) >= n_clusters:
+                    break
+
         return examples
 
 
