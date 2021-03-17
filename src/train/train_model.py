@@ -6,6 +6,7 @@ from corpy.udpipe import Model
 from corpy.udpipe import pprint
 from typing import List
 import re
+
 # we define modules
 from src.train.base_model import ITrain
 from src.train.result_model import TResult
@@ -170,15 +171,19 @@ if __name__ == '__main__':
     # have done
     udt_chinese = UdpipeTrain(language_list[0],
                              # need to start using different file paths 
-                             # or just checking for file in directory
-                              '/home/zglg/SLU/psd/pre-model/chinese-gsdsimp-ud-2.5-191206.udpipe', 
-                              '/home/zglg/SLU/psd/corpus/chinese/平凡的世界.txt')
+                             # or have a dialogue box user input for files to train
+                            '/model/chinese-gsdsimp-ud-2.5-191206.udpipe',
+                            './corpus/chinese/25393-0.txt')
+                             # '/home/zglg/SLU/psd/pre-model/chinese-gsdsimp-ud-2.5-191206.udpipe', 
+                             # '/home/zglg/SLU/psd/corpus/chinese/平凡的世界.txt')
 
     # English
     # train to wiki_en.txt line 15539, batch 0 for English written succeed
     udt_english = UdpipeTrain(language_list[1],
-                              '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
-                              '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+                            '/model/english-ewt-ud-2.5-191206.udpipe',
+                            './corpus/english/135-0.txt')
+                             # '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
+                             # '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
 
     # French
     udt_english.do_train()
