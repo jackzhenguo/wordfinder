@@ -66,15 +66,15 @@ class StoreData(object):
             print("Failed creating database: {}".format(err))
             exit(1)
 
-    def create_tables(self,cursor,tables: dict,tables_sentences: dict):
-        TABLES,TABLES_SENTENCES = tables,tables_sentences
+    def create_tables(self, cursor, tables: dict, tables_sentences: dict):
+
         try:
             cursor.execute("USE {}".format(self.DB_NAME))
         except pymysql.connect.Error as err:
             print(err)
 
-        for table_name in TABLES:
-            table_description = TABLES[table_name]
+        for table_name in tables:
+            table_description = tables[table_name]
             try:
                 print("Creating table {}: \n".format(table_name),end='')
                 cursor.execute(table_description)
@@ -82,8 +82,8 @@ class StoreData(object):
             except pymysql.connect.Error as err:
                 print("Error occured creating tables coz of {}".format(err))
 
-        for table_name in TABLES_SENTENCES:
-            table_description = TABLES_SENTENCES[table_name]
+        for table_name in tables_sentences:
+            table_description = tables_sentences[table_name]
             try:
                 print("Creating table {}: \n".format(table_name),end='')
                 cursor.execute(table_description)
@@ -116,11 +116,10 @@ class StoreData(object):
             cursor.executemany(add_words,data)
             self.cnx.commit()
             print('insert data succeed')
-        except Exception as e:
-            # roll back transaction once happening an error
-            cursor.execute('rollback;')
+        except pymysql.connect.error as e:
+            self.cnx.rollback()
             # TODO: add log
-            print('insert error',rows)
+            print('insert error',e, rows)
 
     def select_data(self,cursor,word,language):
         """
@@ -137,7 +136,6 @@ class StoreData(object):
         try:
             query = ("SELECT word, pos_tag, sentence FROM %s_wordpos "
                      "WHERE  word = %s") % (language,word)
-
             cursor.execute(query)
             rows = cursor.fetchall()
             return rows
@@ -145,7 +143,6 @@ class StoreData(object):
             print("Query error due to {}".format(err))
 
 
-# next, we do unit test
 if __name__ == '__main__':
     """The ddl srcipt should be executed only once a time """
     TABLES = {}
@@ -171,24 +168,8 @@ if __name__ == '__main__':
                                                         "  PRIMARY KEY (`id`)"
                                                         ") ENGINE=InnoDB") % (language,)
 
-'''
-        TABLES_SETENCES[language + '_sentences'] = (
-                                             "CREATE TABLE IF NOT EXISTS  `%s_sentences` ("
-                                             "  `id` int(11) NOT NULL AUTO_INCREMENT,"
-                                             "  `sentence` TEXT NOT NULL,"
-                                             "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
-                                             "  PRIMARY KEY (`id`)"
-                                             ") ENGINE=InnoDB") % (language,)
-'''
-    # login cofig for remote distribution
-    # alpha version not support remote access to database
-    # but in final version we can support remote access by hopper.slu.edu
-    # store_data = StoreData('zguo4', 'SJk+6L4K3fKX',
-    #                        db_host='db1.mcs.slu.edu',
-    #                        db_name='psd_project')
     # so in alpha version we should install mysql in local
     # put config info of database to db_config variable
-
     store_data = StoreData(db_config['user'],
                            db_config['password'],
                            db_host=db_config['db_host'],
