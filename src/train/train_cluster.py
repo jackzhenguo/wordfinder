@@ -1,5 +1,6 @@
 # This module mainly solve the cluster question
 # to get example sentences.
+
 from gensim.test.utils import datapath
 from gensim import utils
 import gensim.models
@@ -38,7 +39,7 @@ def train_model(language_name, corpus_path, save_path, udpipe_model: UdpipeTrain
     sentences = ClusterModel(corpus_path, udpipe_model)
     model = gensim.models.Word2Vec(sentences=sentences)
     model.save(save_path + language_name)
-    print('save succeed')
+    print('Save succeed')
 
 
 def load_model(save_path) -> gensim.models.Word2Vec:
@@ -50,7 +51,7 @@ def load_model(save_path) -> gensim.models.Word2Vec:
     filename = save_path
     model = gensim.models.Word2Vec.load(filename)
 
-    print('loadig succeed')
+    print('Loading succeed')
     for index, word in enumerate(model.wv.index2word):
         if index == 5:
             break
