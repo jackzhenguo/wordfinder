@@ -8,6 +8,13 @@ import re
 from corpy.udpipe import Model
 from typing import List
 
+import re
+
+import argparse
+
+
+# we define modules
+
 from src.train.base_model import ITrain
 from src.train.result_model import TResult
 from src.train.store import StoreData
@@ -145,6 +152,7 @@ class UdpipeTrain(ITrain):
 
 
 if __name__ == '__main__':
+
     # Chinese
     # udt_chinese = UdpipeTrain(language_list[0],
     #                           r'C:\Users\haris\Desktop\wordFinderchinese-gsdsimp-ud-2.5-191206.udpipe',
@@ -156,3 +164,32 @@ if __name__ == '__main__':
                               r'C:\Users\haris\Desktop\wordFinder\haris.txt')
 
     udt_english.do_train()
+
+    # open the command windown
+    # then enter
+    # python path/train_model.py -udfp udpipe_pre_model -cfp path/coprus_filepath
+
+    parser = argparse.ArgumentParser(description='train corpus to get word, pos, and related sentence')
+    parser.add_argument('-udfp', help='udpipe pre-model filepath')
+    parser.add_argument('-cfp', help='corpus filepath for a specific language')
+    args = parser.parse_args()
+    if 'udfp' in args:
+        udpipe_pre_model_path = args.udfp
+    else:
+        print('please input udpipe pre-model filepath')
+    if 'cfp' in args:
+        corpus_filepath = args.cfp
+    else:
+        print('please input corpus filepath')
+
+    # English
+    # train to wiki_en.txt line 15539, batch 0 for English written succeed
+    # udt_english = UdpipeTrain(language_list[1],
+    #                           '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
+    #                           '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+
+    # Chinese
+    # have done
+    udt_chinese = UdpipeTrain(language_list[0], udpipe_pre_model_path, corpus_filepath)
+    udt_chinese.do_train()
+

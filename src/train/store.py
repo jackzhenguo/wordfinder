@@ -3,6 +3,7 @@
 # use and refer interfaces between mysql and python by
 # https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html
 # pymysql is the library for us to use between python and mysql
+
 from __future__ import print_function
 
 import pymysql
@@ -161,6 +162,7 @@ if __name__ == '__main__':
 
     TABLES_SENTENCES = {}
     for language in language_dict.values():
+
         TABLES_SENTENCES[language + '_sentences'] = (
                                                         "CREATE TABLE IF NOT EXISTS  `%s_sentences` ("
                                                         "  `id` int(11) NOT NULL AUTO_INCREMENT,"
@@ -168,6 +170,24 @@ if __name__ == '__main__':
                                                         "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
                                                         "  PRIMARY KEY (`id`)"
                                                         ") ENGINE=InnoDB") % (language,)
+
+'''
+        TABLES_SETENCES[language + '_sentences'] = (
+                                             "CREATE TABLE IF NOT EXISTS  `%s_sentences` ("
+                                             "  `id` int(11) NOT NULL AUTO_INCREMENT,"
+                                             "  `sentence` TEXT NOT NULL,"
+                                             "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
+                                             "  PRIMARY KEY (`id`)"
+                                             ") ENGINE=InnoDB") % (language,)
+'''
+    # login cofig for remote distribution
+    # alpha version not support remote access to database
+    # but in final version we can support remote access by hopper.slu.edu
+    # store_data = StoreData('zguo4', 'SJk+6L4K3fKX',
+    #                        db_host='db1.mcs.slu.edu',
+    #                        db_name='psd_project')
+    # so in alpha version we should install mysql in local
+    # put config info of database to db_config variable
 
     store_data = StoreData(db_config['user'],
                            db_config['password'],
