@@ -6,7 +6,7 @@ import json
 
 from src.train.result_model import TResult
 from src.train.store import StoreData
-from src.util import language_dict, language_list, db_config
+from src.util import language_dict, language_list, db_config, cluster_model_file
 from src.service import AppService
 
 app = Flask(__name__)
@@ -78,7 +78,8 @@ def cluster():
         cluster_input_sentence = appService.pos_dict[sel_tag]
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
-        cluster_result = appService.cluster_sentences(language_name, cluster_input_sentence, cluster_number, )
+        cluser_model_file = cluster_model_file[language_name]
+        cluster_result = appService.cluster_sentences(language_name, cluser_model_file, cluster_input_sentence, cluster_number)
         return render_template('cluster.html', cluster_number=cluster_number, cluster_result=cluster_result)
 
 

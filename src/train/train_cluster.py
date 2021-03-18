@@ -41,14 +41,13 @@ def train_model(language_name, corpus_path, save_path, udpipe_model: UdpipeTrain
     print('save succeed')
 
 
-def load_model(language_name, save_path) -> gensim.models.Word2Vec:
+def load_model(save_path) -> gensim.models.Word2Vec:
     """load model we have trained
-    :param language_name: language name
     :param save_path: filepath saved
     note: because we have ruled the name for word2vec model, so rember to follow it.
     :return: word2vec model we have trained
     """
-    filename = save_path + language_name
+    filename = save_path
     model = gensim.models.Word2Vec.load(filename)
 
     print('loadig succeed')
@@ -94,7 +93,7 @@ if __name__ == "__main__":
     # second train to get the word2vec model
     train_model(languange_name, corpus_filepath, file_path, udt_chinese)
     # finally, after train we can load model to use directly
-    load_model(languange_name, file_path)
+    load_model(file_path)
     print('All done')
 
 
