@@ -6,7 +6,9 @@ from corpy.udpipe import Model
 from corpy.udpipe import pprint
 from typing import List
 import re
+
 import argparse
+
 
 # we define modules
 from src.train.base_model import ITrain
