@@ -196,7 +196,7 @@ Sprint #3 planning
 - 1 methods to get corpus for many languages
     - 1.1 wikipedia : language abbreviation: https://zh.wikipedia.org/wiki/ISO_639-1
     - 1.2 how to get via wikipedia https://jdhao.github.io/2019/01/10/two_chinese_corpus/
-        
+      
 2. database, tables structures
     - current tables structure
     - wordpos table and sentence table
@@ -215,3 +215,10 @@ Sprint #3 planning
 7. deploy to hopper.slu.edu
 
 8. alpha version release
+
+9. we can discuss all following or add items following doesn't contains. 
+
+1. review codes we have pushed to the base github repo @all
+2. with models we had train more languages, train_model. py to database, cluster_model. py to get word2vec model(it doesn't need to store database so everyone can do it)@all
+3. test every py module and welcome to commit bugs we everyone find @all
+4. with logging module add logs before and after important events @all
