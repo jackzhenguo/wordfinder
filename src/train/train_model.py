@@ -2,11 +2,12 @@
 # according to UDpipe pre-train modules
 
 # third-party modules
-from corpy.udpipe import Model
-from corpy.udpipe import pprint
-from typing import List
+import string
 import re
-# we define modules
+
+from corpy.udpipe import Model
+from typing import List
+
 from src.train.base_model import ITrain
 from src.train.result_model import TResult
 from src.train.store import StoreData
@@ -16,7 +17,6 @@ from src.util import language_list, db_config
 class UdpipeTrain(ITrain):
     def __init__(self, language_name, pre_model_name, our_corpus_name):
         """
-
         The language of pre_model_name and our_corpus_name should be identical!
         :param language_name:
         :param pre_model_name: it's from udpipe
@@ -31,31 +31,25 @@ class UdpipeTrain(ITrain):
                                         db_host=db_config['db_host'],
                                         db_name=db_config['db_name'])
             self.cursor = self.store_data.db_connect().cursor()
-
-            # second loading udpipe pre-train model
-            self.model = Model(self.pre_model_name)
-
         except Exception as ex:
             print('logging in database error %s' % ex)
 
     def load_data(self) -> str:
-        with open(self.our_corpus_name, 'r') as f:
-            for sen in f:
-                print('loading one sentence: %s' % (sen,))
-                yield sen
-
+        with open(self.our_corpus_name, 'r', encoding='utf8') as f:
+            return f.readlines()
         print('loading done for our corpus')
 
     def clean_data(self, data: str) -> str:
         """
         data is one or several sentence(s) we expect
-
         if data is \n, \t, empty str, etc, replace them
-
         :param data: raw data
         :return: data after cleaning
         """
-        cleaned_data = re.sub('[\n\t]+', '', data)
+        cleaned_data = re.sub('\w*\d\w*', '', data)
+        cleaned_data = re.sub('\[.*?\]', '', cleaned_data)
+        cleaned_data = re.sub('[‘’“”…]','',cleaned_data)
+        cleaned_data = re.sub(r'\\t | \\n', '', cleaned_data)
         return cleaned_data
 
     def do_train(self) -> List[TResult]:
@@ -65,17 +59,14 @@ class UdpipeTrain(ITrain):
         https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-3131
         :return:
         """
+        model = Model(self.pre_model_name)
         # train our corpus to get POS for each word
         line_no = 1
         for sen in self.load_data():
-            # if line_no < 1811:
-            #     line_no += 1
-            #     continue
             sen_clean = self.clean_data(sen)
             if not sen_clean:
                 continue
-            word_pos = list(self.model.process(sen_clean))
-            # pprint(word_pos)
+            word_pos = list(model.process(sen_clean))
             for i, one_sentence in enumerate(word_pos):
                 sentence_text = self.extract_one_sentence(one_sentence)
                 results = self.extract_one_word(one_sentence, sentence_text)
@@ -109,25 +100,14 @@ class UdpipeTrain(ITrain):
                   upostag='NOUN',
                   head=3,
                   deprel='nmod',
-                  misc='SpaceAfter=No'),
-             Word(id=3,
-                  form='严寒',
-                  lemma='严寒',
-                  xpostag='NN',
-                  upostag='NOUN',
-                  head=22,
-                  deprel='nsubj',
-                  misc='SpaceAfter=No'),
-             
-             omited by myself ])
-       
+                  misc='SpaceAfter=No')])
        :param sentence: udpipe Sentence
-       :return: str 黄土高原严寒而漫长的冬天看来就要过去，但那真正温暖的春天还远远地没有到来。
+       :return: str 黄土高原
        """
         comment = ''.join(sentence.comments)
         try:
-            cs = re.findall(r'text = (.*)', comment)[0]
-            return cs
+            single_sentence = re.findall(r'text = (.*)', comment)[0]
+            return single_sentence
         except Exception as e:
             # TODO: need to write warning log
             print('error: not find a sentence', e)
@@ -136,17 +116,16 @@ class UdpipeTrain(ITrain):
     def extract_one_word(self, sentence, sentence_text: str) -> [TResult]:
         """
         This private method is mainly used to extract one word and it's POS
-
         :param sentence_text:
         :param sentence:
         :return: [TResult]
         """
-        r = []
+        combined_words = []
         for word in sentence.words:
-            if word.lemma and word.lemma not in ITrain.FILTER_WORD:
+            if word.lemma and word.lemma not in string.punctuation:
                 if word.lemma and word.upostag and sentence_text:
-                    r.append(TResult(word.lemma, word.upostag, sentence_text))
-        return r
+                    combined_words .append(TResult(word.lemma, word.upostag, sentence_text))
+        return combined_words
 
     def word_segmentation(self, sentence) -> List[str]:
         """
@@ -167,16 +146,13 @@ class UdpipeTrain(ITrain):
 
 if __name__ == '__main__':
     # Chinese
-    # have done
-    udt_chinese = UdpipeTrain(language_list[0],
-                              '/home/zglg/SLU/psd/pre-model/chinese-gsdsimp-ud-2.5-191206.udpipe',
-                              '/home/zglg/SLU/psd/corpus/chinese/平凡的世界.txt')
+    # udt_chinese = UdpipeTrain(language_list[0],
+    #                           r'C:\Users\haris\Desktop\wordFinderchinese-gsdsimp-ud-2.5-191206.udpipe',
+    #                           r'C:\Users\haris\Desktop\wordFinder\haris平凡的世界.txt')
 
     # English
-    # train to wiki_en.txt line 15539, batch 0 for English written succeed
     udt_english = UdpipeTrain(language_list[1],
-                              '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
-                              '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+                              r'C:\Users\haris\Desktop\wordFinder\english-ewt-ud-2.5-191206.udpipe',
+                              r'C:\Users\haris\Desktop\wordFinder\haris.txt')
 
-    # French
     udt_english.do_train()
