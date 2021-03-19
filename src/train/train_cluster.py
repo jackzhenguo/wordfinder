@@ -1,13 +1,12 @@
 # This module mainly solve the cluster question
 # to get example sentences.
 
-from gensim.test.utils import datapath
-from gensim import utils
 import gensim.models
 import tempfile
 import argparse
 
 from src.train.train_model import UdpipeTrain
+from gensim.test.utils import datapath
 
 
 class ClusterModel(object):
@@ -90,9 +89,9 @@ if __name__ == "__main__":
         print('please input word vector filepath')
 
     # first loading udpipe to segement word for each sentence
-    udt_chinese = UdpipeTrain(languange_name, udpipe_pre_model_path, corpus_filepath)
+    udt_english = UdpipeTrain(languange_name, udpipe_pre_model_path, corpus_filepath)
     # second train to get the word2vec model
-    train_model(languange_name, corpus_filepath, file_path, udt_chinese)
+    train_model(languange_name, corpus_filepath, file_path, udt_english)
     # finally, after train we can load model to use directly
     load_model(file_path)
     print('All done')
