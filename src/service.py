@@ -1,17 +1,19 @@
 # This module provides service functionality to app.py
 # working directory is src folder.
 
-from collections import defaultdict
 import json
-from typing import List
 import sys
 import os
+
+import pandas as pd
 import numpy as np
+from typing import List
 from sklearn.cluster import KMeans
+from collections import defaultdict
 
 from src.train.result_model import TResult
 from src.train.store import StoreData
-from src.util import language_dict, language_list, db_config
+from src.util import language_dict,language_list,db_config
 from src.train.train_cluster import load_model
 from src.train.train_model import UdpipeTrain
 
@@ -25,7 +27,7 @@ try:
 except Exception as ex:
     print('logging in database error %s' % ex)
 
-POS_COLUMN_INDEX, SENTENCE_COLUMN_INDEX = 2, 6
+POS_COLUMN_INDEX,SENTENCE_COLUMN_INDEX = 2,6
 
 
 class AppService(object):
@@ -34,16 +36,16 @@ class AppService(object):
         self.sel_result = None
         self.udt_pre_model = None
 
-    def config_udpipe(self, language_name):
+    def config_udpipe(self,language_name):
         # first loading udpipe to segement word for each sentence
         # TODO: once getting language_name, then to find the related udpipe and corpus
         # all these need to be at preprocessed level
         self.udt_pre_model = UdpipeTrain(language_name,
-                                         '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
-                                         '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+                                         r'C:\Users\haris\Desktop\wordFinder\english-ewt-ud-2.5-191206.udpipe',
+                                         r'C:\Users\haris\Desktop\wordFinder\haris.txt')
         return self
 
-    def find_service(self, language_name: str, sel_word: str):
+    def find_service(self,language_name: str,sel_word: str):
         """This method get results from database by specified language_name and input word
         assgin value to self.pos_dict and self.sel_result
         :param language_name:
@@ -51,7 +53,9 @@ class AppService(object):
         :return: None
         """
         # select
-        sql_str = "select * from " + language_name + "_wordpos as w left join " + language_name + "_sentences as s on w.sentence = s.id where w.word = %s "
+        sql_str = "select * from " + language_name + "_wordpos as w left join " + language_name + "_sentences as s on " \
+                                                                                                  "w.sentence = s.id " \
+                                                                                                  "where w.word = %s "
         try:
             cursor.execute(sql_str, (sel_word,))
             self.sel_result = cursor.fetchall()
@@ -67,7 +71,29 @@ class AppService(object):
             pos_sentences = self.pos_dict[row[POS_COLUMN_INDEX]]
             if row[SENTENCE_COLUMN_INDEX] not in pos_sentences:
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
-        self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
+        self.sel_result = [(sel_word,k,self.pos_dict[k]) for k in self.pos_dict]
+
+    def database(self):
+        self.store_data = StoreData(db_config['user'],
+                                    db_config['password'],
+                                    db_host=db_config['db_host'],
+                                    db_name=db_config['db_name'])
+        self.cursor = self.store_data.db_connect().cursor()
+        query_info = "SELECT sentence FROM english_sentences"
+        self.cursor.execute(query_info)
+        sentences_df = pd.DataFrame(self.cursor.fetchall(),columns=['Sentences'])
+        return sentences_df
+
+    def clusteringData(self):
+        self.store_data = StoreData(db_config['user'],
+                                    db_config['password'],
+                                    db_host=db_config['db_host'],
+                                    db_name=db_config['db_name'])
+        self.cursor = self.store_data.db_connect().cursor()
+        query_info = "SELECT sentence FROM english_sentences"
+        self.cursor.execute(query_info)
+        sentences_dataframe = pd.DataFrame(self.cursor.fetchall(),columns=['Sentences'])
+        return sentences_dataframe
 
     def cluster_sentences(self, language_name: str, save_path: str, sentences: List[str], n_clusters: int) -> List[str]:
         """
@@ -79,6 +105,9 @@ class AppService(object):
         :return:
         """
         n_clusters = int(n_clusters)
+        if n_clusters <=0:
+            print("Parameter is Invalid")
+            return
         if n_clusters > len(sentences):
             # TODO add log
             print('number of cluster bigger than sentences count')
@@ -103,11 +132,11 @@ class AppService(object):
             sent_vectors.append(to_array.mean(axis=0).tolist())
 
         # third using kmeans to cluster
-        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(sent_vectors)
+        kmeans = KMeans(n_clusters=n_clusters,random_state=0).fit(sent_vectors)
         labels = kmeans.labels_
         # fourth select one sentence with each label
-        tmp_labels, examples = [], []
-        for sent, label in zip(sentences, labels):
+        tmp_labels,examples = [],[]
+        for sent,label in zip(sentences,labels):
             if label not in tmp_labels:
                 tmp_labels.append(label)
                 examples.append(sent)
@@ -135,9 +164,9 @@ if __name__ == "__main__":
 
     # first loading udpipe to segement word for each sentence
     udt_english = UdpipeTrain(language_list[1],
-                              '/home/zglg/SLU/psd/pre-model/english-ewt-ud-2.5-191206.udpipe',
-                              '/home/zglg/SLU/psd/corpus/english/wiki_en.txt')
+                              r'C:\Users\haris\Desktop\wordFinder\english-ewt-ud-2.5-191206.udpipe',
+                              r'C:\Users\haris\Desktop\wordFinder\haris.txt')
 
-    cluster_result = AppService().config_udpipe(language_name).cluster_sentences(language_name, sentences, 2)
+    cluster_result = AppService().config_udpipe(language_name).cluster_sentences(language_name,sentences,2)
     print("two examples sentences: \n")
     print(cluster_result)
