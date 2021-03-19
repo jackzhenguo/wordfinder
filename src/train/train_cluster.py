@@ -6,26 +6,18 @@ import tempfile
 import argparse
 
 from src.train.train_model import UdpipeTrain
+from src.service import AppService
 from gensim.test.utils import datapath
+from src.util import db_config
 
 
 class ClusterModel(object):
-    def __init__(self, filename, udpipe_model: UdpipeTrain):
+    def __init__(self,filename,udpipe_model: UdpipeTrain):
         self.filename = filename
         self.udpipe_model = udpipe_model
 
-    def __iter__(self):
-        corpus_path = datapath(self.filename)
-        for line in open(corpus_path):
-            # assume there's one document per line, tokens separated by whitespace
-            # processed_line = utils.simple_preprocess(line)
-            # processed_line = " ".join(processed_line)
-            words = self.udpipe_model.word_segmentation(line)
-            print(words)
-            yield words
 
-
-def train_model(language_name, corpus_path, save_path, udpipe_model: UdpipeTrain):
+def train_model(language_name,corpus_path,save_path,udpipe_model: UdpipeTrain):
     """ train and save word2vec model
     :param udpipe_model:
     :param language_name:
@@ -35,8 +27,14 @@ def train_model(language_name, corpus_path, save_path, udpipe_model: UdpipeTrain
     '/home/zglg/SLU/psd/cluster_pre_train/gensim-word2vec-model-' + language_name
     :return:
     """
-    sentences = ClusterModel(corpus_path, udpipe_model)
-    model = gensim.models.Word2Vec(sentences=sentences)
+
+    # sentences = ClusterModel(corpus_path, udpipe_model)
+    model = gensim.models.Word2Vec(sentences=AppService.clusteringData(),
+                                   size=150,
+                                   window=8,
+                                   min_count=2,
+                                   workers=2,
+                                   iter=10)
     model.save(save_path + language_name)
     print('Save succeed')
 
@@ -49,18 +47,17 @@ def load_model(save_path) -> gensim.models.Word2Vec:
     """
     filename = save_path
     model = gensim.models.Word2Vec.load(filename)
-
     print('Loading succeed')
-    for index, word in enumerate(model.wv.index2word):
+    for index,word in enumerate(model.wv.index2word):
         if index == 5:
             break
-        vec = ",".join(map(lambda i: str(i), model.wv[word]))
+        vec = ",".join(map(lambda i: str(i),model.wv[word]))
         print(f"word #{index}/{len(model.wv.index2word)} is {word}, vec = {vec}")
     return model
 
 
 if __name__ == "__main__":
-    languange_name = 'Chinese'
+    languange_name = 'English'
 
     # input example
     # # udpipe pre-train model that we can download from a link in readme
@@ -91,11 +88,7 @@ if __name__ == "__main__":
     # first loading udpipe to segement word for each sentence
     udt_english = UdpipeTrain(languange_name, udpipe_pre_model_path, corpus_filepath)
     # second train to get the word2vec model
-    train_model(languange_name, corpus_filepath, file_path, udt_english)
+    train_model(languange_name, corpus_filepath, file_path, udpipe_pre_model_path)
     # finally, after train we can load model to use directly
     load_model(file_path)
     print('All done')
-
-
-
-

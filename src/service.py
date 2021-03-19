@@ -5,6 +5,7 @@ import json
 import sys
 import os
 
+import pandas as pd
 import numpy as np
 from typing import List
 from sklearn.cluster import KMeans
@@ -56,7 +57,7 @@ class AppService(object):
                                                                                                   "w.sentence = s.id " \
                                                                                                   "where w.word = %s "
         try:
-            cursor.execute(sql_str,(sel_word,))
+            cursor.execute(sql_str, (sel_word,))
             self.sel_result = cursor.fetchall()
             cnx.commit()
         except Exception as e:
@@ -72,7 +73,29 @@ class AppService(object):
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
         self.sel_result = [(sel_word,k,self.pos_dict[k]) for k in self.pos_dict]
 
-    def cluster_sentences(self,language_name: str,save_path: str,sentences: List[str],n_clusters: int) -> List[str]:
+    def database(self):
+        self.store_data = StoreData(db_config['user'],
+                                    db_config['password'],
+                                    db_host=db_config['db_host'],
+                                    db_name=db_config['db_name'])
+        self.cursor = self.store_data.db_connect().cursor()
+        query_info = "SELECT sentence FROM english_sentences"
+        self.cursor.execute(query_info)
+        sentences_df = pd.DataFrame(self.cursor.fetchall(),columns=['Sentences'])
+        return sentences_df
+
+    def clusteringData(self):
+        self.store_data = StoreData(db_config['user'],
+                                    db_config['password'],
+                                    db_host=db_config['db_host'],
+                                    db_name=db_config['db_name'])
+        self.cursor = self.store_data.db_connect().cursor()
+        query_info = "SELECT sentence FROM english_sentences"
+        self.cursor.execute(query_info)
+        sentences_dataframe = pd.DataFrame(self.cursor.fetchall(),columns=['Sentences'])
+        return sentences_dataframe
+
+    def cluster_sentences(self, language_name: str, save_path: str, sentences: List[str], n_clusters: int) -> List[str]:
         """
         cluster sentences to get examples
         :param language_name:
@@ -82,6 +105,9 @@ class AppService(object):
         :return:
         """
         n_clusters = int(n_clusters)
+        if n_clusters <=0:
+            print("Parameter is Invalid")
+            return
         if n_clusters > len(sentences):
             # TODO add log
             print('number of cluster bigger than sentences count')
