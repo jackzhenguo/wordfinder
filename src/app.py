@@ -1,6 +1,4 @@
 from typing import Any
-
-from flask import Flask, render_template, request, redirect, url_for, flash
 from collections import defaultdict
 import json
 
@@ -8,6 +6,8 @@ from src.train.result_model import TResult
 from src.train.store import StoreData
 from src.util import language_dict, language_list, db_config, cluster_model_file
 from src.service import AppService
+from flask import Flask, render_template, request, redirect, url_for, flash
+
 
 app = Flask(__name__)
 
