@@ -5,17 +5,16 @@
 # pymysql is the library for us to use between python and mysql
 
 from __future__ import print_function
+
 import pymysql
 from typing import List
 
-# import modules we define
 from src.train.result_model import TResult
-from src.util import db_config
-from src.util import language_dict
+from src.util import db_config,language_dict
 
 
 class StoreData(object):
-    def __init__(self, db_user, db_pwd, db_host, db_name):
+    def __init__(self,db_user,db_pwd,db_host,db_name):
         """
         construct databse configurations of mysql
         :param db_user:
@@ -34,24 +33,24 @@ class StoreData(object):
         connect mysql and return connection object
 
         remember: should create connection as few as possible
-        :return: connection to databse object
+        :return: connection to database object
         """
         try:
             if self.DB_NAME:
-                self.cnx = pymysql.connect(user=self.DB_USER, password=self.DB_PWD,
+                self.cnx = pymysql.connect(user=self.DB_USER,
+                                           password=self.DB_PWD,
                                            host=self.DB_HOST,
-                                           database=self.DB_NAME,
-                                           connect_timeout=31536000)
+                                           database=self.DB_NAME,)
             else:
-                self.cnx = pymysql.connect(user=self.DB_USER, password=self.DB_PWD,
-                                           host=self.DB_HOST,
-                                           connect_timeout=31536000)
+                self.cnx = pymysql.connect(user=self.DB_USER,
+                                           password=self.DB_PWD,
+                                           host=self.DB_HOST)
         except pymysql.connect.Error as err:
             print(err)
         print('connection succeed!')
         return self.cnx
 
-    def create_database(self, cursor):
+    def create_database(self,cursor):
         """
         This method is mainly used to create mysql database
         :param cursor: cnx.cursor()
@@ -67,34 +66,34 @@ class StoreData(object):
             print("Failed creating database: {}".format(err))
             exit(1)
 
-    def create_tables(self, cursor, tables: dict, tables_senteces: dict):
-        TABLES, TABLES_SETENCES = tables, tables_senteces
+    def create_tables(self, cursor, tables: dict, tables_sentences: dict):
+
         try:
             cursor.execute("USE {}".format(self.DB_NAME))
         except pymysql.connect.Error as err:
-            print(error)
+            print(err)
 
-        for table_name in TABLES:
-            table_description = TABLES[table_name]
+        for table_name in tables:
+            table_description = tables[table_name]
             try:
-                print("Creating table {}: \n".format(table_name), end='')
+                print("Creating table {}: \n".format(table_name),end='')
                 cursor.execute(table_description)
                 print('table %s creation succeed\n' % table_name)
             except pymysql.connect.Error as err:
-                print(err)
+                print("Error occured creating tables coz of {}".format(err))
 
-        for table_name in TABLES_SETENCES:
-            table_description = TABLES_SETENCES[table_name]
+        for table_name in tables_sentences:
+            table_description = tables_sentences[table_name]
             try:
-                print("Creating table {}: \n".format(table_name), end='')
+                print("Creating table {}: \n".format(table_name),end='')
                 cursor.execute(table_description)
                 print('table %s creation succeed\n' % table_name)
             except pymysql.connect.Error as err:
-                print(err)
+                print("Error occured creating tables coz of {}".format(err))
 
         cursor.close()
 
-    def insert_data(self, cursor, rows: List[TResult], language_name):
+    def insert_data(self,cursor,rows: List[TResult],language_name):
         """
         insert rows to table
         :param cursor
@@ -103,27 +102,26 @@ class StoreData(object):
         :return: List[TResult]
         """
         add_sentence = ("INSERT INTO " + language_name + "_sentences "
-                        "(sentence) " 
-                        "VALUES (%s)")
+                                                         "(sentence) "
+                                                         "VALUES (%s)")
         add_words = ("INSERT INTO  " + language_name + "_wordpos "
-                                       "(word, pos_tag, sentence) "
-                                       "VALUES (%s, %s, %s)")
+                                                       "(word, pos_tag, sentence) "
+                                                       "VALUES (%s, %s, %s)")
         try:
             # First insert sentence table for a specific language
-            cursor.execute(add_sentence, rows[0].sentence)
+            cursor.execute(add_sentence,rows[0].sentence)
             insert_sentence_id = cursor.lastrowid
             # Insert TResults batchly
-            data = [(row.word, row.pos_tag, insert_sentence_id) for row in rows]
-            cursor.executemany(add_words, data)
+            data = [(row.word,row.pos_tag,insert_sentence_id) for row in rows]
+            cursor.executemany(add_words,data)
             self.cnx.commit()
             print('insert data succeed')
-        except Exception as e:
-            # roll back transaction once happening an error
-            cursor.execute('rollback;')
+        except pymysql.connect.error as e:
+            self.cnx.rollback()
             # TODO: add log
-            print('insert error', rows)
+            print('insert error',e, rows)
 
-    def select_data(self, cursor, word, language):
+    def select_data(self,cursor,word,language):
         """
         This method is mainly used to select data from database
         by input word from web interface
@@ -137,46 +135,39 @@ class StoreData(object):
         # "select * from Chinese_wordpos as w left join Chinese_sentences as s on w.sentence=s.id limit 1000;"
         try:
             query = ("SELECT word, pos_tag, sentence FROM %s_wordpos "
-                     "WHERE  word = %s") % (language, word)
-
+                     "WHERE  word = %s") % (language,word)
             cursor.execute(query)
             rows = cursor.fetchall()
             return rows
-        except Exception as ex:
-            print("query error")
+        except pymysql.connect.error as err:
+            print("Query error due to {}".format(err))
 
 
-# next, we do unit test
 if __name__ == '__main__':
     """The ddl srcipt should be executed only once a time """
     TABLES = {}
     for language in language_dict.values():
         TABLES[language + '_wordpos'] = (
-                                             "CREATE TABLE IF NOT EXISTS  `%s_wordpos` ("
-                                             "  `id` int(11) NOT NULL AUTO_INCREMENT,"
-                                             "  `word` varchar(256) NOT NULL,"
-                                             "  `pos_tag` varchar(64) NOT NULL,"
-                                             "  `sentence` TEXT NOT NULL,"
-                                             "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
-                                             "  PRIMARY KEY (`id`)"
-                                             ") ENGINE=InnoDB") % (language,)
+                                            "CREATE TABLE IF NOT EXISTS  `%s_wordpos` ("
+                                            "  `id` int(11) NOT NULL AUTO_INCREMENT,"
+                                            "  `word` varchar(256) NOT NULL,"
+                                            "  `pos_tag` varchar(64) NOT NULL,"
+                                            "  `sentence` TEXT NOT NULL,"
+                                            "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
+                                            "  PRIMARY KEY (`id`)"
+                                            ") ENGINE=InnoDB") % (language,)
 
-    TABLES_SETENCES = {}
+    TABLES_SENTENCES = {}
     for language in language_dict.values():
-        TABLES_SETENCES[language + '_sentences'] = (
-                                             "CREATE TABLE IF NOT EXISTS  `%s_sentences` ("
-                                             "  `id` int(11) NOT NULL AUTO_INCREMENT,"
-                                             "  `sentence` TEXT NOT NULL,"
-                                             "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
-                                             "  PRIMARY KEY (`id`)"
-                                             ") ENGINE=InnoDB") % (language,)
 
-    # login cofig for remote distribution
-    # alpha version not support remote access to database
-    # but in final version we can support remote access by hopper.slu.edu
-    # store_data = StoreData('zguo4', 'SJk+6L4K3fKX',
-    #                        db_host='db1.mcs.slu.edu',
-    #                        db_name='psd_project')
+        TABLES_SENTENCES[language + '_sentences'] = (
+                                                        "CREATE TABLE IF NOT EXISTS  `%s_sentences` ("
+                                                        "  `id` int(11) NOT NULL AUTO_INCREMENT,"
+                                                        "  `sentence` TEXT NOT NULL,"
+                                                        "  `create_time` timestamp NULL default CURRENT_TIMESTAMP,"
+                                                        "  PRIMARY KEY (`id`)"
+                                                        ") ENGINE=InnoDB") % (language,)
+
     # so in alpha version we should install mysql in local
     # put config info of database to db_config variable
     store_data = StoreData(db_config['user'],
@@ -185,5 +176,5 @@ if __name__ == '__main__':
                            db_name=None)
     conn = store_data.db_connect()
     store_data.create_database(conn.cursor())
-    store_data.create_tables(conn.cursor(), TABLES, TABLES_SETENCES)
+    store_data.create_tables(conn.cursor(), TABLES, TABLES_SENTENCES)
     print('Done succeed~')

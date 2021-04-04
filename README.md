@@ -216,9 +216,13 @@ Sprint #3 planning
 
 8. alpha version release
 
-9. we can discuss all following or add items following doesn't contains. 
+### before beta version
 
-1. review codes we have pushed to the base github repo @all
-2. with models we had train more languages, train_model. py to database, cluster_model. py to get word2vec model(it doesn't need to store database so everyone can do it)@all
-3. test every py module and welcome to commit bugs we everyone find @all
-4. with logging module add logs before and after important events @all
+Right now I found our repository has a problem considerable us to pay enough attention. Everyone has an individual file path and they are different from each other, 
+such as file path of train corpus, the file path of cluster model, file path of database config. These file paths cannot be pushed to our base repository! 
+
+We should think of a nice way to solve this issue. And I have an idea.  We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't
+push these corpus and pre-train models to our base repository. We should maintain a common remote disk to store and then open and share a link to provide everyone in our group to use.
+
+I will do these things at once. 
+
