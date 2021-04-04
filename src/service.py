@@ -111,6 +111,9 @@ class AppService(object):
             # TODO add log
             print('number of cluster bigger than sentences count')
             return
+        if len(self.sel_result) <= 0:
+            print('no sentence')
+            return
         # first loading model
         word2vec_model = load_model(save_path)
         # second geting vectors for one sentence
@@ -121,7 +124,8 @@ class AppService(object):
             words = self.udt_pre_model.word_segmentation(sent)
             word_vectors = []
             # iterator to word
-            for word in words:
+            window_words = self._get_keyword_window(self.sel_result[0][0], words, 5)
+            for word in window_words:
                 if word in word2vec_model.wv:
                     word_vectors.append(word2vec_model.wv[word])
                 else:  # not in dict, fill 0
@@ -150,6 +154,44 @@ class AppService(object):
                     break
 
         return examples
+
+    def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
+        """
+        find the index of sel_word at sentence, then decide words of @length size
+        by backward and forward of it.
+        For example: I am very happy to this course of psd if sel_word is happy, then
+        returning: [am, very, happy, to, this]
+
+        if length is even, then returning [very, happy, to, this]
+
+        remember: sel_word is lemmatized
+        """
+        if length <= 0:
+            return words_of_sentence
+        index = words_of_sentence.index(sel_word)
+        if index == -1:
+            return words_of_sentence
+        # backward is not enough
+        if index < length // 2:
+            back_slice = words_of_sentence[:index]
+            # forward is also not enough,
+            # showing the sentence is too short compared to length parameter
+            if (length - index) >= len(words_of_sentence):
+                return words_of_sentence
+            else:
+                return back_slice + words_of_sentence[index: index + length - len(back_slice)]
+        # forward is not enough
+        if (index + length // 2) >= len(words_of_sentence):
+            forward_slice = words_of_sentence[index:len(words_of_sentence)]
+            # backward is also not enough,
+            # showing the sentence is too short compared to length parameter
+            if index - length <= 0:
+                return words_of_sentence
+            else:
+                return words_of_sentence[index - (length - len(forward_slice)):index] + forward_slice
+
+        return words_of_sentence[index - length // 2: index + length // 2 + 1] if length % 2 \
+            else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
 
 
 if __name__ == "__main__":
