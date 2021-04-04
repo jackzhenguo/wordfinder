@@ -6,14 +6,13 @@ function init(){
 }
 
 
-function findByTag(selWord, rowResult, tag){
+function findByTag(selWord, tag, rowResult){
   /*
     selWord: selected word
     rowResult: sentences
     tag: POS
   */
-    selectedTag = tag.textContent;
-    $("#tagInput1").attr("value",selectedTag);
+    $("#tagInput1").attr("value",tag);
     var ulControl = $('#sentencesGroup');
     ulControl.find("li").remove();
     var rowResult1 = rowResult;
@@ -26,9 +25,10 @@ function findByTag(selWord, rowResult, tag){
        var part1 = rowResult1[i-1].slice(0,wordIndex)
        var part2 = rowResult1[i-1].slice(wordIndex, wordIndex + selWord.length+1)
        var part3 = rowResult1[i-1].slice(wordIndex + selWord.length+1, rowResult1[i-1].length)
-        var ulcontent = "<li class=\"list-group-item d-flex justify-content-between align-items-center\">"
-                      + part1 + <p class="text-info"><strong>part2</strong></p> + part3 +
-                      "<span class=\"badge badge-primary badge-pill\">"+i+"</span>"+"</li>";
+       var ulcontent = "<li class=\"list-group-item d-flex justify-content-between align-items-center\">"
+                      + "<p>" + part1 + "<strong class=\"text-success\">" + part2 + "</strong>" + part3 + "</p>" +
+                      "<span class=\"badge badge-primary badge-pill\">"+i+"</span>"+
+                      "</li>";
         ulControl.append(ulcontent);
     }
 
