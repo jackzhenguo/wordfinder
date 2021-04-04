@@ -32,12 +32,17 @@ class UdpipeTrain(ITrain):
                                         db_host=db_config['db_host'],
                                         db_name=db_config['db_name'])
             self.cursor = self.store_data.db_connect().cursor()
+            # second loading udpipe pre-train model
+            self.model = Model(self.pre_model_name)
         except Exception as ex:
             print('logging in database error %s' % ex)
 
     def load_data(self) -> str:
-        with open(self.our_corpus_name, 'r', encoding='utf8') as f:
-            return f.readlines()
+        with open(self.our_corpus_name, 'r', encoding='utf-8') as f:
+            for sent in f:
+                print('loading one sentence: %s' % (sent,))
+                yield sent
+
         print('loading done for our corpus')
 
     def clean_data(self, data: str) -> str:
@@ -60,14 +65,13 @@ class UdpipeTrain(ITrain):
         https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-3131
         :return:
         """
-        model = Model(self.pre_model_name)
         # train our corpus to get POS for each word
         line_no = 1
         for sen in self.load_data():
             sen_clean = self.clean_data(sen)
             if not sen_clean:
                 continue
-            word_pos = list(model.process(sen_clean))
+            word_pos = list(self.model.process(sen_clean))
             for i, one_sentence in enumerate(word_pos):
                 sentence_text = self.extract_one_sentence(one_sentence)
                 results = self.extract_one_word(one_sentence, sentence_text)
