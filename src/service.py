@@ -16,6 +16,7 @@ from src.train.store import StoreData
 from src.util import (language_dict, language_list, db_config, corpus_language, udpipe_language)
 from src.train.train_cluster import load_model
 from src.train.train_model import UdpipeTrain
+from src.train.cluster import Evaluator
 
 try:
     store_data = StoreData(db_config['user'],
@@ -135,11 +136,29 @@ class AppService(object):
             sent_vectors.append(to_array.mean(axis=0).tolist())
 
         # third using kmeans to cluster
-        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(sent_vectors)
-        labels = kmeans.labels_
+        best_score, best_labels = -1, None
+        evaluator = Evaluator(sent_vectors)
+        labels1 = evaluator.kmeans_strategy(n_clusters)
+        score1 = evaluator.higher_better_score(labels1)
+        labels2 = evaluator.agglomerative_strategy(n_clusters)
+        score2 = evaluator.higher_better_score(labels2)
+        if score1 < score2:
+            best_score = score2
+            best_labels = labels2
+            print('agglomerative is better than kmeans')
+        else:
+            best_score = socre1
+            best_labels = labels1
+            print('kmeans is better than agglomerative')
+
+        labels3, n_clusters = evaluator.get_best_n_clusters()
+        score3 = evaluator.higher_better_score(labels3)
+        if best_score < score3:
+            best_labels, best_score = labels3, score3
+
         # fourth select one sentence with each label
         tmp_labels, examples = [], []
-        for sent, label in zip(sentences, labels):
+        for sent, label in zip(sentences, best_labels):
             if label not in tmp_labels:
                 tmp_labels.append(label)
                 examples.append(sent)
