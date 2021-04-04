@@ -219,10 +219,17 @@ Sprint #3 planning
 ### before beta version
 
 Right now I found our repository has a problem considerable us to pay enough attention. Everyone has an individual file path and they are different from each other, 
-such as file path of train corpus, the file path of cluster model, file path of database config. These file paths cannot be pushed to our base repository! 
 
-We should think of a nice way to solve this issue. And I have an idea.  We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't
+such as file path of train corpus, the file path of cluster model, the file path of database config. These file paths cannot be pushed to our base repository! 
+
+We should think of a nice way to solve this issue. And I have an idea. We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't
 push these corpus and pre-train models to our base repository. We should maintain a common remote disk to store and then open and share a link to provide everyone in our group to use.
 
-I will do these things at once. 
+I have created a file named input, there are three files inside it: corpus, udpipemodel, and word2vecmodel. All files in them are hosted at 
+
+download: https://pan.baidu.com/s/14RzwuGjTZwsUhiyVSe-Pgg 
+password: td3e
+
+downloading them and put them on root directory of wordfiner folder
+
 
