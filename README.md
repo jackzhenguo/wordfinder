@@ -196,7 +196,7 @@ Sprint #3 planning
 - 1 methods to get corpus for many languages
     - 1.1 wikipedia : language abbreviation: https://zh.wikipedia.org/wiki/ISO_639-1
     - 1.2 how to get via wikipedia https://jdhao.github.io/2019/01/10/two_chinese_corpus/
-        
+      
 2. database, tables structures
     - current tables structure
     - wordpos table and sentence table
@@ -219,6 +219,7 @@ Sprint #3 planning
 ### before beta version
 
 Right now I found our repository has a problem considerable us to pay enough attention. Everyone has an individual file path and they are different from each other, 
+
 such as file path of train corpus, the file path of cluster model, the file path of database config. These file paths cannot be pushed to our base repository! 
 
 We should think of a nice way to solve this issue. And I have an idea. We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't
@@ -230,4 +231,5 @@ download: https://pan.baidu.com/s/14RzwuGjTZwsUhiyVSe-Pgg
 password: td3e
 
 downloading them and put them on root directory of wordfiner folder
+
 

@@ -6,7 +6,6 @@ import tempfile
 import argparse
 
 from src.train.train_model import UdpipeTrain
-from src.service import AppService
 from gensim.test.utils import datapath
 from src.util import db_config
 
