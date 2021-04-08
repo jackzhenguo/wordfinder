@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "db1.mcs.slu.edu",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "corpus",
+            "database": "psd_project",
+            "username": "zguo4",
+            "password": "SJk+6L4K3fKX"
+        }
+    ]
+}
