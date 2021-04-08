@@ -15,6 +15,7 @@ class ClusterModel(object):
     def __init__(self, corpus_path, udpipe_model: UdpipeTrain):
         self.corpus_path = corpus_path
         self.udpipe_model = udpipe_model
+        self._word_count, self._MAX_WORD_COUNT = 0, 500000
 
     def __iter__(self):
         # corpus_path = datapath(self.filename)
@@ -23,6 +24,9 @@ class ClusterModel(object):
             # processed_line = utils.simple_preprocess(line)
             # processed_line = " ".join(processed_line)
             words = self.udpipe_model.word_segmentation(line)
+            self._word_count += len(words)
+            if self._word_count > self._MAX_WORD_COUNT:
+                return
             print(words)
             yield words
 
@@ -58,11 +62,11 @@ def load_model(save_path) -> gensim.models.Word2Vec:
     filename = save_path
     model = gensim.models.Word2Vec.load(filename)
     print('Loading succeed')
-    for index,word in enumerate(model.wv.index2word):
-        if index == 5:
-            break
-        vec = ",".join(map(lambda i: str(i),model.wv[word]))
-        print(f"word #{index}/{len(model.wv.index2word)} is {word}, vec = {vec}")
+    # for index,word in enumerate(model.wv.index2word):
+    #     if index == 5:
+    #         break
+    #     vec = ",".join(map(lambda i: str(i),model.wv[word]))
+    #     print(f"word #{index}/{len(model.wv.index2word)} is {word}, vec = {vec}")
     return model
 
 
@@ -76,7 +80,7 @@ def batch():
         # first loading udpipe to segement word for each sentence
         udt_lang = UdpipeTrain(lang, udpipe_pre_model_path, corpus_filepath)
         # second train to get the word2vec model
-        word2vec_result_file = 'word2vecmodel//gensim-word2vec-model-'
+        word2vec_result_file = 'input//word2vecmodel//gensim-word2vec-model-'
         train_model(lang, corpus_filepath, word2vec_result_file, udt_lang)
 
 
