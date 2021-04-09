@@ -129,8 +129,8 @@ class AppService(object):
             for word in window_words:
                 if word in word2vec_model.wv:
                     word_vectors.append(word2vec_model.wv[word])
-                else:  # not in dict, fill 0
-                    word_vectors.append([0] * default_dimn)
+                # else:  # not in dict, fill 0
+                    # word_vectors.append([0] * default_dimn)
 
             to_array = np.array(word_vectors)
             sent_vectors.append(to_array.mean(axis=0).tolist())
@@ -147,7 +147,8 @@ class AppService(object):
             best_labels = labels2
             print('agglomerative is better than kmeans')
         else:
-            best_score = socre1
+
+            best_score = score1
             best_labels = labels1
             print('kmeans is better than agglomerative')
 
@@ -155,6 +156,15 @@ class AppService(object):
         score3 = evaluator.higher_better_score(labels3)
         if best_score < score3:
             best_labels, best_score = labels3, score3
+
+            best_score = score1
+            best_labels = labels1
+            print('kmeans is better than agglomerative')
+
+        # labels3, n_clusters = evaluator.get_best_n_clusters()
+        # score3 = evaluator.higher_better_score(labels3)
+        # if best_score < score3:
+        #     best_labels, best_score = labels3, score3
 
         # fourth select one sentence with each label
         tmp_labels, examples = [], []

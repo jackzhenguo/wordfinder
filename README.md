@@ -231,5 +231,3 @@ download: https://pan.baidu.com/s/14RzwuGjTZwsUhiyVSe-Pgg
 password: td3e
 
 downloading them and put them on root directory of wordfiner folder
-
-
