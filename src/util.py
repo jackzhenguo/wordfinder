@@ -35,10 +35,10 @@ udpipe_language = {'Chinese': 'input//udpipemodel//chinese-gsdsimp-ud-2.5-191206
 
 word2vec_language = {'Chinese': 'input//word2vecmodel//gensim-word2vec-model-Chinese',
                      'English': 'input//word2vecmodel//gensim-word2vec-model-English',
-                     'French': '',
-                     'Italian': '',
-                     'Spanish': '',
-                     'Korean': '',
-                     'Russian': '',
-                     'Portuguese': ''}
+                     'French': 'input//word2vecmodel//gensim-word2vec-model-French',
+                     'Italian': 'input//word2vecmodel//gensim-word2vec-model-Italian',
+                     'Spanish': 'input//word2vecmodel//gensim-word2vec-model-Spanish',
+                     'Korean': 'input//word2vecmodel//gensim-word2vec-model-Korean',
+                     'Russian': 'input//word2vecmodel//gensim-word2vec-model-Russian',
+                     'Portuguese': 'input//word2vecmodel//gensim-word2vec-model-Portuguese'}
 
