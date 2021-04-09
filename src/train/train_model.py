@@ -1,5 +1,9 @@
-# this module is mainly used to train our corpus
-# according to UDpipe pre-train modules
+"""
+this module is mainly used to train our corpus according to UDpipe pre-train modules
+
+Remember: working directory needed to be set to wordfinder!
+"""
+
 
 # third-party modules
 import string
@@ -12,7 +16,7 @@ from typing import List
 from src.train.base_model import ITrain
 from src.train.result_model import TResult
 from src.train.store import StoreData
-from src.util import language_list, db_config
+from src.util import language_list, db_config, corpus_language, udpipe_language
 
 
 class UdpipeTrain(ITrain):
@@ -34,6 +38,7 @@ class UdpipeTrain(ITrain):
             self.cursor = self.store_data.db_connect().cursor()
             # second loading udpipe pre-train model
             self.model = Model(self.pre_model_name)
+            self._word_count, self.MAX_WORD_COUNT = 0, 500000
         except Exception as ex:
             print('logging in database error %s' % ex)
 
@@ -68,6 +73,8 @@ class UdpipeTrain(ITrain):
         # train our corpus to get POS for each word
         line_no = 1
         for sen in self.load_data():
+            if self._word_count > self.MAX_WORD_COUNT:
+                return
             sen_clean = self.clean_data(sen)
             if not sen_clean:
                 continue
@@ -130,6 +137,7 @@ class UdpipeTrain(ITrain):
             if word.lemma and word.lemma not in string.punctuation:
                 if word.lemma and word.upostag and sentence_text:
                     combined_words .append(TResult(word.lemma, word.upostag, sentence_text))
+                    self._word_count += 1
         return combined_words
 
     def word_segmentation(self, sentence) -> List[str]:
@@ -149,23 +157,33 @@ class UdpipeTrain(ITrain):
         return words
 
 
+def batch_train():
+    for lang in language_list:
+        if lang in ['Chinese', 'English']:
+            continue
+        udpipe_pre_model_path = udpipe_language[lang]
+        corpus_filepath = corpus_language[lang]
+        train_model = UdpipeTrain(lang, udpipe_pre_model_path, corpus_filepath)
+        print('begin train %s corpus' % (lang, ))
+        train_model.do_train()
+        print('done train %s corpus' % (lang,))
+
+
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description='train corpus to get word, pos, and related sentence')
-    parser.add_argument('-udfp', help='udpipe pre-model filepath')
-    parser.add_argument('-cfp', help='corpus filepath for a specific language')
-    args = parser.parse_args()
-    if 'udfp' in args:
-        udpipe_pre_model_path = args.udfp
-    else:
-        print('please input udpipe pre-model filepath')
-    if 'cfp' in args:
-        corpus_filepath = args.cfp
-    else:
-        print('please input corpus filepath')
-
-    # English
-    # have done
-    udt_english = UdpipeTrain(language_list[0], udpipe_pre_model_path, corpus_filepath)
-    udt_english.do_train()
+    batch_train()
+    # parser = argparse.ArgumentParser(description='train corpus to get word, pos, and related sentence')
+    # parser.add_argument('-udfp', help='udpipe pre-model filepath')
+    # parser.add_argument('-cfp', help='corpus filepath for a specific language')
+    # args = parser.parse_args()
+    # if 'udfp' in args:
+    #     udpipe_pre_model_path = args.udfp
+    # else:
+    #     print('please input udpipe pre-model filepath')
+    # if 'cfp' in args:
+    #     corpus_filepath = args.cfp
+    # else:
+    #     print('please input corpus filepath')
+    #
+    # udt_english = UdpipeTrain(language_list[0], udpipe_pre_model_path, corpus_filepath)
+    # udt_english.do_train()
 
