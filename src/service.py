@@ -104,6 +104,9 @@ class AppService(object):
         :param n_clusters:
         :return:
         """
+        no_n_input = False
+        if n_clusters == '':
+            n_clusters, no_n_input = 2, True
         n_clusters = int(n_clusters)
         if n_clusters <= 0:
             print("Parameter is Invalid")
@@ -129,8 +132,8 @@ class AppService(object):
             for word in window_words:
                 if word in word2vec_model.wv:
                     word_vectors.append(word2vec_model.wv[word])
-                else:  # not in dict, fill 0
-                    word_vectors.append([0] * default_dimn)
+                # else:  # not in dict, fill 0
+                    # word_vectors.append([0] * default_dimn)
 
             to_array = np.array(word_vectors)
             sent_vectors.append(to_array.mean(axis=0).tolist())
@@ -147,32 +150,23 @@ class AppService(object):
             best_labels = labels2
             print('agglomerative is better than kmeans')
         else:
-            best_score = socre1
+            best_score = score1
             best_labels = labels1
             print('kmeans is better than agglomerative')
 
-        labels3, n_clusters = evaluator.get_best_n_clusters()
+        # fourth select one sentence with each label
+        examples = self._get_examples(sentences, best_labels, n_clusters)
+
+        labels3, recommend_clusters = evaluator.get_best_n_clusters()
         score3 = evaluator.higher_better_score(labels3)
         if best_score < score3:
-            best_labels, best_score = labels3, score3
+            print('recommend %d sentences' % (recommend_clusters, ))
+        recommend_sentences = self._get_examples(sentences, labels3, recommend_clusters)
 
-        # fourth select one sentence with each label
-        tmp_labels, examples = [], []
-        for sent, label in zip(sentences, best_labels):
-            if label not in tmp_labels:
-                tmp_labels.append(label)
-                examples.append(sent)
-            if len(examples) == n_clusters:
-                break
-        # add bottom logic for cluster
-        if len(examples) < n_clusters:
-            for sent in sentences:
-                if sent not in examples:
-                    examples.append(sent)
-                if len(examples) >= n_clusters:
-                    break
+        if no_n_input:
+            examples = recommend_sentences
 
-        return examples
+        return examples, recommend_sentences
 
     def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
         """
@@ -211,6 +205,23 @@ class AppService(object):
 
         return words_of_sentence[index - length // 2: index + length // 2 + 1] if length % 2 \
             else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
+
+    def _get_examples(self, sentences: List[str], best_labels, n_clusters: int):
+        tmp_labels, examples = [], []
+        for sent, label in zip(sentences, best_labels):
+            if label not in tmp_labels:
+                tmp_labels.append(label)
+                examples.append(sent)
+            if len(examples) == n_clusters:
+                break
+        # add bottom logic for cluster
+        if len(examples) < n_clusters:
+            for sent in sentences:
+                if sent not in examples:
+                    examples.append(sent)
+                if len(examples) >= n_clusters:
+                    break
+        return examples
 
 
 if __name__ == "__main__":

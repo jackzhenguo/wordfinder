@@ -231,3 +231,12 @@ download: https://pan.baidu.com/s/14RzwuGjTZwsUhiyVSe-Pgg
 password: td3e
 
 downloading them and put them on root directory of wordfiner folder
+
+
+### sprint 5
+
+1、database: we should build a remote DB @Willie
+2、word2vec: two methods of doing that @Zhen 
+3、we should label every sentence and show all sentences with a label to the cluster web interfaces @all
+
+
