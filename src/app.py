@@ -79,8 +79,12 @@ def cluster():
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
         cluster_model_file = word2vec_language[language_name]
-        cluster_result = appService.cluster_sentences(language_name, cluster_model_file, cluster_input_sentence, cluster_number)
-        return render_template('cluster.html', cluster_number=cluster_number, cluster_result=cluster_result)
+        cluster_result, rec_cluster_result = appService.cluster_sentences(
+            language_name, cluster_model_file, cluster_input_sentence, cluster_number)
+        return render_template('cluster.html',
+                               cluster_number=cluster_number,
+                               cluster_result=cluster_result,
+                               rec_cluster_result=rec_cluster_result)
 
 
 if __name__ == '__main__':
