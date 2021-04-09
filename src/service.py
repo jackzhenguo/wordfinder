@@ -104,6 +104,9 @@ class AppService(object):
         :param n_clusters:
         :return:
         """
+        no_n_input = False
+        if n_clusters == '':
+            n_clusters, no_n_input = 2, True
         n_clusters = int(n_clusters)
         if n_clusters <= 0:
             print("Parameter is Invalid")
@@ -159,6 +162,9 @@ class AppService(object):
         if best_score < score3:
             print('recommend %d sentences' % (recommend_clusters, ))
         recommend_sentences = self._get_examples(sentences, labels3, recommend_clusters)
+
+        if no_n_input:
+            examples = recommend_sentences
 
         return examples, recommend_sentences
 
