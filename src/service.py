@@ -161,28 +161,16 @@ class AppService(object):
             best_labels = labels1
             print('kmeans is better than agglomerative')
 
-        # labels3, n_clusters = evaluator.get_best_n_clusters()
-        # score3 = evaluator.higher_better_score(labels3)
-        # if best_score < score3:
-        #     best_labels, best_score = labels3, score3
-
         # fourth select one sentence with each label
-        tmp_labels, examples = [], []
-        for sent, label in zip(sentences, best_labels):
-            if label not in tmp_labels:
-                tmp_labels.append(label)
-                examples.append(sent)
-            if len(examples) == n_clusters:
-                break
-        # add bottom logic for cluster
-        if len(examples) < n_clusters:
-            for sent in sentences:
-                if sent not in examples:
-                    examples.append(sent)
-                if len(examples) >= n_clusters:
-                    break
+        examples = self._get_examples(sentences, best_labels, n_clusters)
 
-        return examples
+        labels3, recommend_clusters = evaluator.get_best_n_clusters()
+        score3 = evaluator.higher_better_score(labels3)
+        if best_score < score3:
+            print('recommend %d sentences' % (recommend_clusters, ))
+        recommend_sentences = self._get_examples(sentences, labels3, recommend_clusters)
+
+        return examples, recommend_sentences
 
     def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
         """
@@ -221,6 +209,23 @@ class AppService(object):
 
         return words_of_sentence[index - length // 2: index + length // 2 + 1] if length % 2 \
             else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
+
+    def _get_examples(self, sentences: List[str], best_labels, n_clusters: int):
+        tmp_labels, examples = [], []
+        for sent, label in zip(sentences, best_labels):
+            if label not in tmp_labels:
+                tmp_labels.append(label)
+                examples.append(sent)
+            if len(examples) == n_clusters:
+                break
+        # add bottom logic for cluster
+        if len(examples) < n_clusters:
+            for sent in sentences:
+                if sent not in examples:
+                    examples.append(sent)
+                if len(examples) >= n_clusters:
+                    break
+        return examples
 
 
 if __name__ == "__main__":
