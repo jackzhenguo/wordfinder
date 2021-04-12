@@ -12,7 +12,7 @@ def bert_en(select_word, sentences: List[str]):
     for sent in sentences:
         words = sent.split(' ')
         sent2 = get_keyword_window(select_word, words, length=10)
-        sent2 = sent2.join(' ')
+        sent2 = ' '.join(sent2)
         sent_vect = nlp(sent2).vector
         sents_vectors.append(sent_vect)
     print(sents_vectors)
@@ -25,6 +25,7 @@ def clustering_question(sents, sents_word2vec, NUM_CLUSTERS=15):
         repeats=25, avoid_empty_clusters=True)
 
     assigned_clusters = kclusterer.cluster(sents_word2vec, assign_clusters=True)
+    data = pd.DataFrame([], columns=['text', 'cluster', 'centroid'])
     data.loc[:, 'text'] = sents
     data.loc[:, 'cluster'] = pd.Series(assigned_clusters, index=data.index)
     data.loc[:, 'centroid'] = data['cluster'].apply(lambda x: kclusterer.means()[x])
