@@ -150,6 +150,16 @@ class AppService(object):
             best_labels = labels2
             print('agglomerative is better than kmeans')
         else:
+
+            best_score = score1
+            best_labels = labels1
+            print('kmeans is better than agglomerative')
+
+        labels3, n_clusters = evaluator.get_best_n_clusters()
+        score3 = evaluator.higher_better_score(labels3)
+        if best_score < score3:
+            best_labels, best_score = labels3, score3
+
             best_score = score1
             best_labels = labels1
             print('kmeans is better than agglomerative')
