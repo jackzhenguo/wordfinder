@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from src.train.result_model import TResult
 from src.train.store import StoreData
-from src.util import (language_dict, language_list, db_config, corpus_language, udpipe_language)
+from src.util import *
 from src.train.train_cluster import load_model
 from src.train.train_model import UdpipeTrain
 from src.train.cluster import Evaluator
@@ -128,7 +128,7 @@ class AppService(object):
             words = self.udt_pre_model.word_segmentation(sent)
             word_vectors = []
             # iterator to word
-            window_words = self._get_keyword_window(self.sel_result[0][0], words, 5)
+            window_words = get_keyword_window(self.sel_result[0][0], words, 5)
             for word in window_words:
                 if word in word2vec_model.wv:
                     word_vectors.append(word2vec_model.wv[word])
@@ -167,44 +167,6 @@ class AppService(object):
             examples = recommend_sentences
 
         return examples, recommend_sentences
-
-    def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
-        """
-        find the index of sel_word at sentence, then decide words of @length size
-        by backward and forward of it.
-        For example: I am very happy to this course of psd if sel_word is happy, then
-        returning: [am, very, happy, to, this]
-
-        if length is even, then returning [very, happy, to, this]
-
-        remember: sel_word is lemmatized
-        """
-        if length <= 0:
-            return words_of_sentence
-        index = words_of_sentence.index(sel_word)
-        if index == -1:
-            return words_of_sentence
-        # backward is not enough
-        if index < length // 2:
-            back_slice = words_of_sentence[:index]
-            # forward is also not enough,
-            # showing the sentence is too short compared to length parameter
-            if (length - index) >= len(words_of_sentence):
-                return words_of_sentence
-            else:
-                return back_slice + words_of_sentence[index: index + length - len(back_slice)]
-        # forward is not enough
-        if (index + length // 2) >= len(words_of_sentence):
-            forward_slice = words_of_sentence[index:len(words_of_sentence)]
-            # backward is also not enough,
-            # showing the sentence is too short compared to length parameter
-            if index - length <= 0:
-                return words_of_sentence
-            else:
-                return words_of_sentence[index - (length - len(forward_slice)):index] + forward_slice
-
-        return words_of_sentence[index - length // 2: index + length // 2 + 1] if length % 2 \
-            else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
 
     def _get_examples(self, sentences: List[str], best_labels, n_clusters: int):
         tmp_labels, examples = [], []
