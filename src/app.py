@@ -43,9 +43,10 @@ def find():
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
         appService.find_service(language_name, sel_word)
+        sel_result_kwic = appService.kwic(sel_word, appService.sel_result)
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": appService.sel_result})
+                                                      "sel_result": sel_result_kwic})
 
 
 @app.route('/find2', methods=['POST'])

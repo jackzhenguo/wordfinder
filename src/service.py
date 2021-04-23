@@ -168,14 +168,28 @@ class AppService(object):
 
         return examples, recommend_sentences
 
-    def kwic(self, selword: str, sentenceWithPOS: list):
+    def kwic(self, selword: str, sentence_with_pos: list):
+        """
+        :param: selword
+        :param: sentenceWithPOS
+
+        sentence_with_pos examples:
+        [("NOUN", "bank", ["I go to the bank", "The house lies the right of the river bank"]),
+        ("VERB", "bank", ["I banked in a slot"])
+        """
         # This is similar to sentenceWithPOS but processed after KWIC
-        sentenceWithPOS2 = []
-        for sentTuple in sentenceWithPOS:
-            sents = sentTuple[2]
-            for sent in sents:
+        result = []
+        for sentTuple in sentence_with_pos:
+            sents_kwic = []
+            result.append((sentTuple[0], sentTuple[1], sentTuple[2], sents_kwic))
+
+            sents_origin = sentTuple[2]
+            for sent in sents_origin:
                 words = sent.split(" ")
-                self._get_keyword_window(selword, words)
+                words2 = self._get_keyword_window(selword, words)
+                sents_kwic.append(" ".join(words2))
+
+        return result
 
     def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
         """
@@ -188,10 +202,11 @@ class AppService(object):
 
         remember: sel_word is lemmatized
         """
-        if length <= 0:
+        if length <= 0 or len(words_of_sentence) <= length:
             return words_of_sentence
         index = words_of_sentence.index(sel_word)
         if index == -1:
+            print("warning: cannot find %s in sentence: %s".format(sel_word, words_of_sentence))
             return words_of_sentence
         # backward is not enough
         if index < length // 2:

@@ -5,7 +5,6 @@ true labels of clusters .
 date:4.2.2021
 """
 from sklearn import metrics
-from sklearn.metrics import pairwise_distances
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import DBSCAN
