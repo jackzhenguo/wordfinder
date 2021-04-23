@@ -168,6 +168,15 @@ class AppService(object):
 
         return examples, recommend_sentences
 
+    def kwic(self, selword: str, sentenceWithPOS: list):
+        # This is similar to sentenceWithPOS but processed after KWIC
+        sentenceWithPOS2 = []
+        for sentTuple in sentenceWithPOS:
+            sents = sentTuple[2]
+            for sent in sents:
+                words = sent.split(" ")
+                self._get_keyword_window(selword, words)
+
     def _get_keyword_window(self, sel_word: str, words_of_sentence: List, length=5) -> List[str]:
         """
         find the index of sel_word at sentence, then decide words of @length size
