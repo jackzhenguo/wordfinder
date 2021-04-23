@@ -207,11 +207,12 @@ class AppService(object):
             return words_of_sentence
         index = -1
         for iw, word in enumerate(words_of_sentence):
+            word = word.lower()
             if len(re.findall(sel_word, word)) > 0:
                 index = iw
 
         if index == -1:
-            print("warning: cannot find %s in sentence: %s".format(sel_word, words_of_sentence))
+            print("warning: cannot find %s in sentence: %s" % (sel_word, words_of_sentence))
             return words_of_sentence
         # backward is not enough
         if index < length // 2:
