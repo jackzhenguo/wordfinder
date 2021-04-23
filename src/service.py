@@ -17,6 +17,7 @@ from src.util import (language_dict, language_list, db_config, corpus_language, 
 from src.train.train_cluster import load_model
 from src.train.train_model import UdpipeTrain
 from src.train.cluster import Evaluator
+import re
 
 try:
     store_data = StoreData(db_config['user'],
@@ -186,7 +187,7 @@ class AppService(object):
             sents_origin = sentTuple[2]
             for sent in sents_origin:
                 words = sent.split(" ")
-                words2 = self._get_keyword_window(selword, words)
+                words2 = self._get_keyword_window(selword, words, 9)
                 sents_kwic.append(" ".join(words2))
 
         return result
@@ -204,7 +205,11 @@ class AppService(object):
         """
         if length <= 0 or len(words_of_sentence) <= length:
             return words_of_sentence
-        index = words_of_sentence.index(sel_word)
+        index = -1
+        for iw, word in enumerate(words_of_sentence):
+            if len(re.findall(sel_word, word)) > 0:
+                index = iw
+
         if index == -1:
             print("warning: cannot find %s in sentence: %s".format(sel_word, words_of_sentence))
             return words_of_sentence
