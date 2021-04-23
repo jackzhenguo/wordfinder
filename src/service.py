@@ -166,7 +166,7 @@ class AppService(object):
         if no_n_input:
             examples = recommend_sentences
 
-        return examples, recommend_sentences
+        return examples, recommend_sentences, sentences, best_labels
 
     def kwic(self, selword: str, sentence_with_pos: list):
         """
