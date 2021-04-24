@@ -116,14 +116,14 @@ class AppService(object):
         n_clusters = int(n_clusters)
         if n_clusters <= 0:
             print("Parameter is Invalid")
-            return
-        if n_clusters >= len(sentences):
+            return [None]*4
+        if n_clusters > len(sentences):
             # TODO add log
             print('number of cluster bigger than sentences count')
-            return
+            return [None]*4
         if len(self.sel_result) <= 0:
             print('no sentence')
-            return
+            return [None]*4
         # first loading model
         word2vec_model = load_model(save_path)
         # second geting vectors for one sentence
@@ -223,6 +223,12 @@ class AppService(object):
                 if len(examples) >= n_clusters:
                     break
         return examples
+
+
+class AppContext(object):
+    sel_language = None
+    sel_word = None
+    sel_result_kwic = None
 
 
 if __name__ == "__main__":

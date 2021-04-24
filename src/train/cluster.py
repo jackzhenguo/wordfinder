@@ -8,6 +8,7 @@ from sklearn import metrics
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import DBSCAN
+import numpy as np
 
 
 class Evaluator(object):
@@ -55,7 +56,11 @@ class Evaluator(object):
         """
         higher value means better cluster result
         """
+        # only one cluster
         if labels.min() == labels.max():
+            return 1.0
+        # cluster count equals to len of X
+        if len(np.unique(labels)) == len(self.X):
             return 1.0
         return metrics.silhouette_score(self.X, labels, metric='euclidean')
 
