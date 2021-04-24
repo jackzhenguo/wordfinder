@@ -43,9 +43,10 @@ def find():
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
         appService.find_service(language_name, sel_word)
+        sel_result_kwic = appService.kwic(sel_word, appService.sel_result)
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": appService.sel_result})
+                                                      "sel_result": sel_result_kwic})
 
 
 @app.route('/find2', methods=['POST'])
@@ -57,9 +58,10 @@ def find2():
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
         appService.find_service(language_name, sel_word)
+        sel_result_kwic = appService.kwic(sel_word, appService.sel_result)
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": appService.sel_result})
+                                                      "sel_result": sel_result_kwic})
 
 
 @app.route('/cluster', methods=['POST'])
@@ -75,16 +77,18 @@ def cluster():
         language_name = request.form['languageName']
         cluster_number = request.form['clusterNumber']
         sel_tag = request.form['tagInput1']
+        # TODO: clicking the button of return previous page then clicking cluster button causes a bug
         cluster_input_sentence = appService.pos_dict[sel_tag]
         if not appService.udt_pre_model:
             appService.config_udpipe(language_name)
         cluster_model_file = word2vec_language[language_name]
-        cluster_result, rec_cluster_result = appService.cluster_sentences(
+        cluster_result, rec_cluster_result, sentences, best_labels = appService.cluster_sentences(
             language_name, cluster_model_file, cluster_input_sentence, cluster_number)
         return render_template('cluster.html',
                                cluster_number=cluster_number,
                                cluster_result=cluster_result,
-                               rec_cluster_result=rec_cluster_result)
+                               rec_cluster_result=rec_cluster_result,
+                               sentences_with_labels=zip(sentences, best_labels))
 
 
 if __name__ == '__main__':

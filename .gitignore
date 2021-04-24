@@ -2,3 +2,5 @@
 .idea
 input
 __pycache__
+psd_project.sql
+log/

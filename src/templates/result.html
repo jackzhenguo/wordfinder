@@ -23,7 +23,7 @@
             </div>
             {% if input_data.sel_result%}
             {% for row_result in input_data.sel_result %}
-            <button type="button" class="btn btn-outline-success mr-sm-2 my-sm-1" id={{row_result.1}} onclick="findByTag('{{row_result.0}}','{{row_result.1}}',{{row_result.2}})">{{row_result.1}}</button>
+            <button type="button" class="btn btn-outline-success mr-sm-2 my-sm-1" id={{row_result.1}} onclick="findByTag('{{row_result.0}}','{{row_result.1}}',{{row_result.2}}, {{row_result.3}})">{{row_result.1}}</button>
             {% endfor %}
             {% endif %}
         </div>

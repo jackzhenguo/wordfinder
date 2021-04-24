@@ -13,10 +13,16 @@ from collections import defaultdict
 
 from src.train.result_model import TResult
 from src.train.store import StoreData
-from src.util import *
+from src.util import (language_dict,
+                      language_list,
+                      db_config,
+                      corpus_language,
+                      udpipe_language,
+                      get_keyword_window)
 from src.train.train_cluster import load_model
 from src.train.train_model import UdpipeTrain
 from src.train.cluster import Evaluator
+import re
 
 try:
     store_data = StoreData(db_config['user'],
@@ -111,7 +117,7 @@ class AppService(object):
         if n_clusters <= 0:
             print("Parameter is Invalid")
             return
-        if n_clusters > len(sentences):
+        if n_clusters >= len(sentences):
             # TODO add log
             print('number of cluster bigger than sentences count')
             return
@@ -176,7 +182,30 @@ class AppService(object):
         if no_n_input:
             examples = recommend_sentences
 
-        return examples, recommend_sentences
+        return examples, recommend_sentences, sentences, best_labels
+
+    def kwic(self, selword: str, sentence_with_pos: list):
+        """
+        :param: selword
+        :param: sentenceWithPOS
+
+        sentence_with_pos examples:
+        [("NOUN", "bank", ["I go to the bank", "The house lies the right of the river bank"]),
+        ("VERB", "bank", ["I banked in a slot"])
+        """
+        # This is similar to sentenceWithPOS but processed after KWIC
+        result = []
+        for sentTuple in sentence_with_pos:
+            sents_kwic = []
+            result.append((sentTuple[0], sentTuple[1], sentTuple[2], sents_kwic))
+
+            sents_origin = sentTuple[2]
+            for sent in sents_origin:
+                words = sent.split(" ")
+                words2 = get_keyword_window(selword, words, 9)
+                sents_kwic.append(" ".join(words2))
+
+        return result
 
     def _get_examples(self, sentences: List[str], best_labels, n_clusters: int):
         tmp_labels, examples = [], []

@@ -3,6 +3,7 @@
 # date: 2020.2.28
 
 from typing import List
+import re
 
 
 # TODO: keeping update
@@ -57,10 +58,16 @@ def get_keyword_window(sel_word: str, words_of_sentence: List, length=5) -> List
 
     remember: sel_word is lemmatized
     """
-    if length <= 0:
+    if length <= 0 or len(words_of_sentence) <= length:
         return words_of_sentence
-    index = words_of_sentence.index(sel_word)
+    index = -1
+    for iw, word in enumerate(words_of_sentence):
+        word = word.lower()
+        if len(re.findall(sel_word, word)) > 0:
+            index = iw
+
     if index == -1:
+        print("warning: cannot find %s in sentence: %s" % (sel_word, words_of_sentence))
         return words_of_sentence
     # backward is not enough
     if index < length // 2:
