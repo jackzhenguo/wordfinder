@@ -222,8 +222,7 @@ Right now I found our repository has a problem considerable us to pay enough att
 
 such as file path of train corpus, the file path of cluster model, the file path of database config. These file paths cannot be pushed to our base repository! 
 
-We should think of a nice way to solve this issue. And I have an idea. We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't
-push these corpus and pre-train models to our base repository. We should maintain a common remote disk to store and then open and share a link to provide everyone in our group to use.
+We should think of a nice way to solve this issue. And I have an idea. We should maintain a common file relative path and all data files and config data should be put inside it. Also, there's another important thing to remember: don't push these corpus and pre-train models to our base repository. We should maintain a common remote disk to store and then open and share a link to provide everyone in our group to use.
 
 I have created a file named input, there are three files inside it: corpus, udpipemodel, and word2vecmodel. All files in them are hosted at 
 
@@ -231,3 +230,39 @@ download: https://pan.baidu.com/s/14RzwuGjTZwsUhiyVSe-Pgg
 password: td3e
 
 downloading them and put them on root directory of wordfiner folder
+
+
+
+### Features
+
+Beta version supports features:
+
+1. Support query in 10 + languages
+2. Support to select a certain language, input corresponding words, and display multiple parts of speech of words
+3. Click a part of speech of the word to be looked up to show all the corresponding examples
+4. Use KWIC to show examples
+5. Support to input different number of clusters
+6. Click cluster sentences to get examples containing words
+7. Examples showing all words are supported
+
+
+
+Update features:
+
+1. KWIC, in the middle of the line
+
+2. now only show part sentence, it's better to show the whole sentence when click.
+
+   <a href="">a point on the bank hidden by brush where </a>
+
+3. in cluster web interface, we should group the sentences as cluster labels, sorting.
+
+4. .gitignore files 
+
+5. French clustering 3: 
+
+   ValueError: Number of labels is 1. Valid values are 2 to n_samples - 1 (inclusive)
+
+   Chinese
+
+6.  there are bugs of cluster function
