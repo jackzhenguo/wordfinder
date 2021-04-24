@@ -55,6 +55,8 @@ class Evaluator(object):
         """
         higher value means better cluster result
         """
+        if labels.min() == labels.max():
+            return 1.0
         return metrics.silhouette_score(self.X, labels, metric='euclidean')
 
     def nearer_zero_better_score(self, labels):
