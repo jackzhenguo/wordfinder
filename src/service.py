@@ -117,7 +117,7 @@ class AppService(object):
         if n_clusters <= 0:
             print("Parameter is Invalid")
             return
-        if n_clusters > len(sentences):
+        if n_clusters >= len(sentences):
             # TODO add log
             print('number of cluster bigger than sentences count')
             return
