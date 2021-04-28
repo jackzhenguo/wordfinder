@@ -35,17 +35,19 @@ function findByTag(selWord, tag, rowResult, wordResultKWIC){
        //var wordIndex = wordResultKWIC[i-1].toLowerCase().indexOf(selWord.toLowerCase());
        var ulcontent = "<li class=\"list-group-item d-flex justify-content-between align-items-center\"> <p>";
        if(allIndexes.length > 0){
-            wordResultKWIC[i-1]
-       }
-       for(let i=0; i < allIndexes.length; i++){
-           var part1 = wordResultKWIC[i-1].slice(0,i)
-           var part2 = wordResultKWIC[i-1].slice(i, i + selWord.length)
-           var part3 = wordResultKWIC[i-1].slice(i + selWord.length, wordResultKWIC[i-1].length)
-           var j = i + selWord.length
-           var ulcontent = ulcontent + part1 + "<strong class=\"text-success\">" + part2 + "</strong>" + part3;
+           var startIndex = 0;
+           for(let j=0; j < allIndexes.length; j++){
+               var part1 = wordResultKWIC[i-1].slice(startIndex,allIndexes[j])
+               var part2 = wordResultKWIC[i-1].slice(allIndexes[j], allIndexes[j] + selWord.length)
+               startIndex = allIndexes[j] + selWord.length
+               ulcontent = ulcontent + part1 + "<strong class=\"text-success\">" + part2 + "</strong>";
+            }
+            if(startIndex < wordResultKWIC[i-1].length){
+               ulcontent = ulcontent + wordResultKWIC[i-1].slice(startIndex, wordResultKWIC[i-1].length)
+            }
+            ulcontent += "</p> <span class=\"badge badge-primary badge-pill\">"+i+"</span>" + "</li>";
+            ulControl.append(ulcontent);
         }
-        ulcontent += "</p> <span class=\"badge badge-primary badge-pill\">"+i+"</span>" + "</li>";
-        ulControl.append(ulcontent);
     }
 
 }
