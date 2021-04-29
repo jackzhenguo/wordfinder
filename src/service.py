@@ -24,6 +24,8 @@ from src.train.train_model import UdpipeTrain
 from src.train.cluster import Evaluator
 import re
 from src.train.KWIC import keywords_in_context, find_and_replace
+from src.util import get_keyword_window, kwic_show
+
 
 try:
     store_data = StoreData(db_config['user'],
@@ -202,10 +204,15 @@ class AppService(object):
 
             sents_origin = sentTuple[2]
             for sent in sents_origin:
-                result_text = keywords_in_context(sent, [selword])
+                # result_text = keywords_in_context(sent, [selword])
                 # Highlight Keywords
                 # result_text = find_and_replace(result_text, selword, "\x1b[34m" + selword + "\x1b[0m")
-                sents_kwic.append(result_text)
+                # sents_kwic.append(result_text)
+                window_words = get_keyword_window(selword, sent.split(" "))
+                result_text = kwic_show(window_words, selword)
+                if result_text:
+                    print(result_text)
+                    sents_kwic.append(result_text)
 
         return result
 

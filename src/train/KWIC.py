@@ -231,11 +231,24 @@ def find_and_replace(text, find_str, replacement_str):
 
         # replace (cut the original word out and insert the replacement)
         text = text[:start] + replacement_str + text[start+len(find_str):]
+        prettyPrintKWIC(text)
 
         offset = start + len(replacement_str)
         start = text[offset:].find(find_str)
 
     return text
+
+
+def prettyPrintKWIC(kwic):
+    n = len(kwic)
+    keyindex = n // 2
+    width = 1
+
+    outstring = ' '.join(kwic[:keyindex]).rjust(width*keyindex)
+    outstring += str(kwic[keyindex]).center(len(kwic[keyindex])+6)
+    outstring += ' '.join(kwic[(keyindex+1):])
+    # print(outstring)
+    return outstring
 
 
 if __name__ == "__main__":
@@ -251,8 +264,8 @@ if __name__ == "__main__":
         'Arriving at the Douro, Wellesley was unable to cross the river because Soult\'s army had either destroyed or moved all the boats to the northern bank.']
     KEYWORDS = ['bank']
     for TEXT in TEXTs:
-        result_text = keywords_in_context(TEXT, KEYWORDS)
+        result_text = keywords_in_context(TEXT, KEYWORDS, max_words=3, sep="")
         # Highlight Keywords
         for k in KEYWORDS:
-            result_text = find_and_replace(result_text, k, "\x1b[34m"+k+"\x1b[0m")
+            result_text = find_and_replace(result_text, k, k)
             print(result_text)

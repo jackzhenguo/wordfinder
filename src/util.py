@@ -90,3 +90,31 @@ def get_keyword_window(sel_word: str, words_of_sentence: List, length=5) -> List
 
     return words_of_sentence[index - length // 2: index + length // 2 + 1] if length % 2 \
         else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
+
+
+def kwic_show(words_of_sentence, sel_word, sum_sent_length=60, key_word_space=1):
+    sent = ' '.join(words_of_sentence)
+    key_index = sent.lower().index(sel_word.lower())
+    if key_index != -1:
+        pre_kwic = sent[:key_index].rjust(sum_sent_length//2)
+        key_kwic = key_word_space*' ' + sel_word + key_word_space*' '
+        post_kwic = sent[key_index+len(sel_word):]
+        sel_word_kwic = pre_kwic + key_kwic + post_kwic
+        return sel_word_kwic
+    return None
+
+
+if __name__ == "__main__":
+    """
+    Text = Sentence which needs to be shrinked
+    Keyword = Searched word
+    """
+    texts = [
+        'In 222 BC, the Romans besieged Acerrae, an Insubre fortification on the right bank of the River Adda between Cremona and Laus Pompeia (Lodi Vecchio).',
+        'A spokesman for the bank said "We will be compensating customers who did not receive full services from Affinion, and providing our apology."',
+        'One of the first fully functional direct banks in the United States was the Security First Network bank (SFNB), which was launched in October 1995',
+        'At the same time, internet-only banks or "virtual banks" appeared.',
+        'Arriving at the Douro, Wellesley was unable to cross the river because Soult\'s army had either destroyed or moved all the boats to the northern bank.']
+    for text in texts:
+        result = get_keyword_window('bank', text.split(' '))
+        kwic_show(result, 'bank')
