@@ -1,5 +1,11 @@
-# This module provides service functionality to app.py
-# working directory is src folder.
+# encoding: utf-8
+"""
+@file: service.py
+@desc: This module provides service functionality to app.py
+@author: group3
+@time: 4/15/2021
+"""
+
 
 import json
 import sys
@@ -12,16 +18,16 @@ from sklearn.cluster import KMeans
 from collections import defaultdict
 
 from src.train.result_model import TResult
-from src.train.store import StoreData
+from src.train.store_model import StoreData
 from src.util import (language_dict,
                       language_list,
                       db_config,
                       corpus_language,
                       udpipe_language,
                       get_keyword_window)
-from src.train.train_cluster import load_model
-from src.train.train_model import UdpipeTrain
-from src.train.cluster import Evaluator
+from src.train.word_vector import load_model
+from src.train.pos_model import UdpipeTrain
+from src.train.cluster_evaluate import Evaluator
 import re
 from src.train.KWIC import keywords_in_context, find_and_replace
 from src.util import get_keyword_window, kwic_show

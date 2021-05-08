@@ -94,7 +94,7 @@ what's the main functionality of the alpha version (deadline March 19)?
   - [VERB](https://universaldependencies.org/u/pos/VERB.html): verb
   - [X](https://universaldependencies.org/u/pos/X.html): other
 
-- more important and useful links about how we develop this project have put at [tmp](./tmp) folder
+- more important and useful links about how we develop this project have put at [tmp](docs) folder
 
 
 ### 3.2 beta version
@@ -151,7 +151,7 @@ Discussion list:
 
   5  cluster sentences to get example sentences.
 
-![big task steps](assets/big-task-1.png)
+![big task steps](docs/big-task-1.png)
 
 
 

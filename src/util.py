@@ -1,21 +1,38 @@
-# util model
-# user: zhenguo
-# date: 2020.2.28
+"""
+@file: util.py
+@desc: utility model
+@author: group3
+@time: 2/28/2021
+"""
 
 from typing import List
 import re
+import base64
 
+pwd = base64.b64decode(b'TGh4R3oxMDIyMzE=')
 
-# TODO: keeping update
-language_list = ['Chinese', 'English', 'French', 'Italian', 'Spanish', 'Korean', 'Russian', 'Portuguese']
-language_dict = {'1': 'Chinese', '2': 'English', '3': 'French', '4': 'Italian',
-                 '5': 'Spanish', '6': 'Korean', '7': 'Russian', '8': 'Portuguese'}
+language_list = ['Chinese',
+                 'English',
+                 'French',
+                 'Italian',
+                 'Spanish',
+                 'Korean',
+                 'Russian',
+                 'Portuguese']
 
-# database config
-# cofig for local database
+language_dict = {'1': 'Chinese',
+                 '2': 'English',
+                 '3': 'French',
+                 '4': 'Italian',
+                 '5': 'Spanish',
+                 '6': 'Korean',
+                 '7': 'Russian',
+                 '8': 'Portuguese'}
+
+# database config, remote mysql
 db_config = {'user': 'root',
-             'password': 'root@123',
-             'db_host': 'localhost',
+             'password': pwd.decode("utf-8"),
+             'db_host': '192.144.171.233',
              'db_name': 'psd_project'}
 
 # language and corresponding file path of corpus
@@ -93,6 +110,9 @@ def get_keyword_window(sel_word: str, words_of_sentence: List, length=5) -> List
 
 
 def kwic_show(words_of_sentence, sel_word, sum_sent_length=60, key_word_space=1):
+    """
+    TODO: need to more test
+    """
     sent = ' '.join(words_of_sentence)
     key_index = sent.lower().index(sel_word.lower())
     if key_index != -1:
@@ -102,19 +122,3 @@ def kwic_show(words_of_sentence, sel_word, sum_sent_length=60, key_word_space=1)
         sel_word_kwic = pre_kwic + key_kwic + post_kwic
         return sel_word_kwic
     return None
-
-
-if __name__ == "__main__":
-    """
-    Text = Sentence which needs to be shrinked
-    Keyword = Searched word
-    """
-    texts = [
-        'In 222 BC, the Romans besieged Acerrae, an Insubre fortification on the right bank of the River Adda between Cremona and Laus Pompeia (Lodi Vecchio).',
-        'A spokesman for the bank said "We will be compensating customers who did not receive full services from Affinion, and providing our apology."',
-        'One of the first fully functional direct banks in the United States was the Security First Network bank (SFNB), which was launched in October 1995',
-        'At the same time, internet-only banks or "virtual banks" appeared.',
-        'Arriving at the Douro, Wellesley was unable to cross the river because Soult\'s army had either destroyed or moved all the boats to the northern bank.']
-    for text in texts:
-        result = get_keyword_window('bank', text.split(' '))
-        kwic_show(result, 'bank')

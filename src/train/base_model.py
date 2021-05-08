@@ -1,7 +1,11 @@
-# this module is mainly used to be base class for train
-# supporting the base interfaces for train model.
-# author: zhenguo
-# date: 2021.2.26
+# encoding: utf-8
+"""
+@file: base_model.py
+@desc: this module is mainly used to be base class for train
+supporting the base interfaces for train model.
+@author: group3
+@time: 2/26/2021
+"""
 
 from typing import List
 
@@ -13,7 +17,6 @@ class ITrain(metaclass=ABCMeta):
     # when writing a word to database should filter udpipe <root> (udpipe.Word.lemma)
     # and these kinds of punctuations
     # BTW： maybe use regular expression
-    # TODO: keep maintaining for this object
     # FILTER_WORD = ['<root>', ',', '，', '.', '。', ';', '；', '!', '！', '?', '？',
     #                '\\', '、', '“', '”', '……']
 

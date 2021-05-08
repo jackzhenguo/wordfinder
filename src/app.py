@@ -1,12 +1,14 @@
-from typing import Any
-from collections import defaultdict
-import json
+# encoding: utf-8
+"""
+@file: app.py
+@desc: flask application for wordfinder
+@author: group3
+@time: 4/15/2021
+"""
 
-from src.train.result_model import TResult
-from src.train.store import StoreData
-from src.util import language_dict, language_list, db_config, word2vec_language
+from src.util import language_dict,  word2vec_language
 from src.service import AppService, AppContext
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, flash
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
