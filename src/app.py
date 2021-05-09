@@ -5,24 +5,21 @@
 @author: group3
 @time: 4/15/2021
 """
-
-from src.util import language_dict,  word2vec_language
-from src.service import AppService, AppContext
 from flask import Flask, render_template, request, flash
+from src.config import language_dict,  word2vec_language
+from src.service import AppService, AppContext
+import nltk
 
+nltk.download('stopwords')
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-
-# TODO: need to change with the selection different language
 app_service = AppService()
-app_context = AppContext
 
 
 @app.route('/')
 def index():
     """
     This is the index web page
-
     :return:index.html
     """
     return render_template('index.html')
@@ -31,8 +28,7 @@ def index():
 @app.route('/find', methods=['POST'])
 def find():
     """
-    this method mainly solve /find request
-
+    This method mainly processes the '/find' request
     first, according to form data, select by database to get result
     second, reorganize to certain data structures
     finally, render to result.html
@@ -43,16 +39,19 @@ def find():
         language_id = request.form['sellanguage']
         sel_word = request.form['selword']
         language_name = language_dict[language_id]
-        app_context.sel_word = sel_word
-        app_context.sel_language = language_name
-        if not app_service.udt_pre_model:
-            app_service.config_udpipe(language_name)
+        AppContext.sel_language = language_name
+        AppContext.sel_word = sel_word
+
+        if not AppContext.udt_pre_model:
+            app_service.config_udpipe(language_name, AppContext.db_conn)
+
         app_service.find_service(language_name, sel_word)
-        sel_result_kwic = app_service.kwic(sel_word, app_service.sel_result)
-        app_context.sel_result_kwic = sel_result_kwic
+
+        app_service.kwic(sel_word, AppContext.sel_results)
+
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": sel_result_kwic})
+                                                      "sel_result": AppContext.sentence_kwic})
 
 
 @app.route('/find2', methods=['POST'])
@@ -61,16 +60,17 @@ def find2():
     if request.method == 'POST':
         language_name = request.form['sellanguage']
         sel_word = request.form['selword']
-        app_context.sel_word = sel_word
-        app_context.sel_language = language_name
-        if not app_service.udt_pre_model:
-            app_service.config_udpipe(language_name)
+        AppContext.sel_word = sel_word
+        AppContext.sel_language = language_name
+        if not AppContext.udt_pre_model:
+            app_service.config_udpipe(language_name, AppContext.db_conn)
+
         app_service.find_service(language_name, sel_word)
-        sel_result_kwic = app_service.kwic(sel_word, app_service.sel_result)
-        app_context.sel_result_kwic = sel_result_kwic
+
+        app_service.kwic(sel_word, AppContext.sel_result_source)
     return render_template('result.html', input_data={"language_name": language_name,
                                                       "sel_word": sel_word,
-                                                      "sel_result": sel_result_kwic})
+                                                      "sel_result": AppContext.sentence_kwic})
 
 
 @app.route('/cluster', methods=['POST'])
@@ -85,24 +85,30 @@ def cluster():
     if request.method == 'POST':
         language_name = request.form['languageName']
         cluster_number = request.form['clusterNumber']
-        sel_tag = request.form['tagInput1']
-        # TODO: clicking the button of return previous page then clicking cluster button causes a bug
-        cluster_input_sentence = app_service.pos_dict[sel_tag]
-        if not app_service.udt_pre_model:
-            app_service.config_udpipe(language_name)
+        AppContext.sel_word_pos = request.form['tagInput1']
+        if language_name is None:
+            language_name = AppContext.sel_language
+        if AppContext.sel_word_pos_dict is None:
+            app_service.find_service(AppContext.sel_language, AppContext.sel_word)
+        cluster_input_sentence = AppContext.sel_word_pos_dict[AppContext.sel_word_pos]
+        if not AppContext.udt_pre_model:
+            app_service.config_udpipe(language_name, AppContext.db_conn)
+
         cluster_model_file = word2vec_language[language_name]
-        cluster_result, rec_cluster_result, sentences, best_labels = app_service.cluster_sentences(
-            language_name, cluster_model_file, cluster_input_sentence, cluster_number)
-        if not cluster_result:
-            flash("invalid input to cluster number")
+
+        cluster_succeed = app_service.cluster_service(cluster_model_file, cluster_input_sentence, cluster_number)
+
+        if not cluster_succeed or not AppContext.cluster_sentences:
+            flash("invalid cluster number")
             return render_template('result.html', input_data={"language_name": language_name,
-                                                              "sel_word": app_context.sel_word,
-                                                              "sel_result": app_context.sel_result_kwic})
+                                                              "sel_word": AppContext.sel_word,
+                                                              "sel_result": AppContext.sentence_kwic})
+        sentences, labels = AppService.group_sentences()
         return render_template('cluster.html',
                                cluster_number=cluster_number,
-                               cluster_result=cluster_result,
-                               rec_cluster_result=rec_cluster_result,
-                               sentences_with_labels=zip(sentences, best_labels))
+                               cluster_result=AppContext.cluster_sentences,
+                               rec_cluster_result=AppContext.cluster_sentences_rmd,
+                               sentences_with_labels=zip(sentences, labels))
 
 
 if __name__ == '__main__':

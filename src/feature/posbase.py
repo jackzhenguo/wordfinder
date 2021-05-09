@@ -1,8 +1,8 @@
 # encoding: utf-8
 """
-@file: base_model.py
-@desc: this module is mainly used to be base class for train
-supporting the base interfaces for train model.
+@file: posbase.py
+@desc: this module is mainly used to be base class for feature
+supporting the base interfaces for feature model.
 @author: group3
 @time: 2/26/2021
 """
@@ -10,7 +10,7 @@ supporting the base interfaces for train model.
 from typing import List
 
 from abc import ABCMeta, abstractmethod
-from src.train.result_model import TResult
+from src.feature.pos import TResult
 
 
 class ITrain(metaclass=ABCMeta):
@@ -48,16 +48,16 @@ class ITrain(metaclass=ABCMeta):
     @abstractmethod
     def do_train(self) -> List[TResult]:
         """
-        This method mainly does the train job, and train strategy is via udpipe
-        or NLTK or other train strategies.
+        This method mainly does the feature job, and feature strategy is via udpipe
+        or NLTK or other feature strategies.
 
-        About the train corpus, if it's very large, then loading memory possibly
+        About the feature corpus, if it's very large, then loading memory possibly
         causes memory overflow. Thus, it's more reasonable to load each sentence to
         memory one after one.
 
         After loading one sentence with specific :param{language_name}, it's likely
         that calling self.clean_data method does the clean to this sentence. Then,
-        by loading pre-train model with specific :param{language_name}, we get each
+        by loading pre-feature model with specific :param{language_name}, we get each
         word and word's POS of this sentence.
 
         The result for this sentence would cache to TResult model we define,

@@ -1,68 +1,100 @@
 # encoding: utf-8
 """
 @file: service.py
-@desc: This module provides service functionality to app.py
+@desc: This module provides service functionalities to app.py
 @author: group3
 @time: 4/15/2021
 """
 
-
-import json
-import sys
-import os
-
-import pandas as pd
-import numpy as np
-from typing import List
-from sklearn.cluster import KMeans
+from typing import List, Dict
 from collections import defaultdict
+import numpy as np
 
-from src.train.result_model import TResult
-from src.train.store_model import StoreData
-from src.util import (language_dict,
-                      language_list,
-                      db_config,
-                      corpus_language,
-                      udpipe_language,
-                      get_keyword_window)
-from src.train.word_vector import load_model
-from src.train.pos_model import UdpipeTrain
-from src.train.cluster_evaluate import Evaluator
-import re
-from src.train.KWIC import keywords_in_context, find_and_replace
-from src.util import get_keyword_window, kwic_show
-
-
-try:
-    store_data = StoreData(db_config['user'],
-                           db_config['password'],
-                           db_host=db_config['db_host'],
-                           db_name=db_config['db_name'])
-    cnx = store_data.db_connect()
-    cursor = cnx.cursor()
-except Exception as ex:
-    print('logging in database error %s' % ex)
+from src.feature.postrain import UdpipeTrain
+from src.feature.vector import load_model
+from src.feature.store import StoreData
+from src.feature.kwic import kwic_show, get_keyword_window, get_keyword_window2
+from src.feature.clusters import ClusterSentences
+from src.feature.metrics import Evaluator
+from src.config import (language_list,
+                        db_config,
+                        corpus_language,
+                        udpipe_language)
+from src.logs import Log
 
 POS_COLUMN_INDEX, SENTENCE_COLUMN_INDEX = 2, 6
+log = Log()
+
+
+class AppContext(object):
+    """Encapsulate the context data of the current language and the currently selected word
+    """
+    # the language that customers selected
+    sel_language: str = None
+
+    # the word that customers input
+    sel_word: str = None
+    # select which Part of speech
+    sel_word_pos: str = None
+
+    # source of sentences
+    sel_result_source: List = None
+
+    # Sentences corresponding to the word that customers input
+    # sel_result = (("sink", "NOUN", ["Don't just leave your dirty plates in the sink!"]),
+    #                ("sink", "VERB", ["The wheels, started to sink into the mud.", "How could you sink so low?"]
+    sel_results: List = None
+
+    # the word corresponding POS dict
+    # sel_pos_dict = {"NOUN": ["Don't just leave your dirty plates in the sink!"],
+    #                 "VERB": ["The wheels, started to sink into the mud.", "How could you sink so low?"]
+    #                }
+    sel_word_pos_dict: Dict = None
+
+    # KWIC of sentences corresponding to the word that customers input
+    sentence_kwic: List = None
+
+    # udpipe model to segment word for each sentence
+    udt_pre_model = None
+
+    # example sentences after clustering
+    cluster_sentences: List = None
+    # recommend_sentences
+    cluster_sentences_rmd: List = None
+    # cluster labels
+    cluster_best_labels: List = None
+    # clustering succeed
+    cluster_sentences_succeed: List = None
+
+    # the connection object of the database
+    db_conn = None
 
 
 class AppService(object):
     def __init__(self):
-        self.pos_dict = None
-        self.sel_result = None
-        self.udt_pre_model = None
+        try:
+            store_data = StoreData(db_config['user'],
+                                   db_config['password'],
+                                   db_host=db_config['db_host'],
+                                   db_name=db_config['db_name'])
+            AppContext.db_conn = store_data.db_connect()
+        except Exception as ex:
+            log.error('database link error %s' % (ex,))
 
-    def config_udpipe(self, language_name):
-        # first loading udpipe to segement word for each sentence
+    def config_udpipe(self, language_name, db_conn=None):
+        """config udpipe"""
+        # first loading udpipe to segment word for each sentence
         # all these need to be at preprocessed level
-        self.udt_pre_model = UdpipeTrain(language_name,
-                                         udpipe_language[language_name],
-                                         corpus_language[language_name])
+        AppContext.udt_pre_model = UdpipeTrain(language_name,
+                                               udpipe_language[language_name],
+                                               corpus_language[language_name],
+                                               db_conn)
         return self
 
-    def find_service(self, language_name: str, sel_word: str):
+    @staticmethod
+    def find_service(language_name: str, sel_word: str):
         """This method get results from database by specified language_name and input word
-        assgin value to self.pos_dict and self.sel_result
+        assign value to self.pos_dict and self.sel_result
         :param language_name:
         :param sel_word:
         :return: None
@@ -72,159 +104,138 @@ class AppService(object):
                                                                                                   "w.sentence = s.id " \
                                                                                                   "where w.word = %s "
         try:
+            cursor = AppContext.db_conn.cursor()
             cursor.execute(sql_str, (sel_word,))
-            self.sel_result = cursor.fetchall()
-            cnx.commit()
+            AppContext.sel_result_source = cursor.fetchall()
+            AppContext.db_conn.commit()
         except Exception as e:
-            print(e)
+            log.error(e)
 
         # convert to data structure following
         # sel_result = (("sink", "NOUN", ["Don't just leave your dirty plates in the sink!"]),
         #                ("sink", "VERB", ["The wheels, started to sink into the mud.", "How could you sink so low?"]))
-        self.pos_dict = defaultdict(list)
-        for row in self.sel_result:
-            pos_sentences = self.pos_dict[row[POS_COLUMN_INDEX]]
+        AppContext.sel_word_pos_dict = defaultdict(list)
+        for row in AppContext.sel_result_source:
+            pos_sentences = AppContext.sel_word_pos_dict[row[POS_COLUMN_INDEX]]
             if row[SENTENCE_COLUMN_INDEX] not in pos_sentences:
                 pos_sentences.append(row[SENTENCE_COLUMN_INDEX])
-        self.sel_result = [(sel_word, k, self.pos_dict[k]) for k in self.pos_dict]
+        AppContext.sel_results = [(sel_word, k, AppContext.sel_word_pos_dict[k]) for k in AppContext.sel_word_pos_dict]
 
-    def database(self):
-        self.store_data = StoreData(db_config['user'],
-                                    db_config['password'],
-                                    db_host=db_config['db_host'],
-                                    db_name=db_config['db_name'])
-        self.cursor = self.store_data.db_connect().cursor()
-        query_info = "SELECT sentence FROM english_sentences"
-        self.cursor.execute(query_info)
-        sentences_df = pd.DataFrame(self.cursor.fetchall(), columns=['Sentences'])
-        return sentences_df
-
-    def clusteringData(self):
-        self.store_data = StoreData(db_config['user'],
-                                    db_config['password'],
-                                    db_host=db_config['db_host'],
-                                    db_name=db_config['db_name'])
-        self.cursor = self.store_data.db_connect().cursor()
-        query_info = "SELECT sentence FROM english_sentences"
-        self.cursor.execute(query_info)
-        sentences_dataframe = pd.DataFrame(self.cursor.fetchall(), columns=['Sentences'])
-        return sentences_dataframe
-
-    def cluster_sentences(self, language_name: str, save_path: str, sentences: List[str], n_clusters: int) -> List[str]:
+    def cluster_service(self, save_path: str, sentences: List[str], n_clusters: int) -> List[str]:
         """
         cluster sentences to get examples
-        :param language_name:
-        :param save_path: the saved path for our cluster model trained well
-        :param sentences:
-        :param n_clusters:
-        :return:
+        :param save_path: the saved path for our word vector model
+        :param sentences: sentences
+        :param n_clusters: number of clusters
         """
         no_n_input = False
+
         if n_clusters == '':
             n_clusters, no_n_input = 2, True
+
         n_clusters = int(n_clusters)
         if n_clusters <= 0:
-            print("Parameter is Invalid")
-            return [None]*4
+            log.warning("cluster param n_clusters %d is invalid" % (n_clusters,))
+            return False
         if n_clusters > len(sentences):
-            # TODO add log
-            print('number of cluster bigger than sentences count')
-            return [None]*4
-        if len(self.sel_result) <= 0:
-            print('no sentence')
-            return [None]*4
+            log.warning('number of cluster %d bigger than sentences count %s' % (n_clusters, len(sentences)))
+            return False
+        if len(AppContext.sel_result_source) <= 0:
+            log.warning('no sentence')
+            return False
+
         # first loading model
         word2vec_model = load_model(save_path)
-        # second geting vectors for one sentence
-        sent_vectors = []
-        default_dimn = 100
-        # iterator to sentence
-        for sent in sentences:
-            words = self.udt_pre_model.word_segmentation(sent)
-            word_vectors = []
-            # iterator to word
-            window_words = get_keyword_window(self.sel_result[0][0], words, 5)
-            for word in window_words:
-                if word in word2vec_model.wv:
-                    word_vectors.append(word2vec_model.wv[word])
-                # else:  # not in dict, fill 0
-                    # word_vectors.append([0] * default_dimn)
+        if word2vec_model is None:
+            return False
 
+        # second getting vectors for one sentence
+        sent_vectors, failure_sentences = [], []
+        for sent in sentences:
+            words = AppContext.udt_pre_model.word_segmentation(sent)
+            # iterator to word
+            # window_words = get_keyword_window(AppContext.sel_word, words, 5)
+            window_words = get_keyword_window2(AppContext.sel_language, AppContext.sel_word, words, 5)
+            word_vectors = [word2vec_model.wv[word.lower()] for word in window_words if word in word2vec_model.wv]
             to_array = np.array(word_vectors)
+            if len(to_array) == 0:
+                failure_sentences.append(sent)
+                log.warning('vector of very word in sentence %s not found ' % (sent, ))
+                continue
             sent_vectors.append(to_array.mean(axis=0).tolist())
+        AppContext.cluster_sentences_succeed = [sent for sent in sentences if sent not in failure_sentences]
 
         # third using kmeans to cluster
-        best_score, best_labels = -1, None
+        cluster = ClusterSentences(sent_vectors)
         evaluator = Evaluator(sent_vectors)
-        labels1 = evaluator.kmeans_strategy(n_clusters)
-        score1 = evaluator.higher_better_score(labels1)
-        labels2 = evaluator.agglomerative_strategy(n_clusters)
-        score2 = evaluator.higher_better_score(labels2)
-        if score1 < score2:
-            best_score = score2
-            best_labels = labels2
-            print('agglomerative is better than kmeans')
-        else:
 
-            best_score = score1
-            best_labels = labels1
-            print('kmeans is better than agglomerative')
+        labels1 = cluster.kmeans_strategy(n_clusters)
+        score1 = evaluator.score(labels1)
 
-        labels3, n_clusters = evaluator.get_best_n_clusters()
-        score3 = evaluator.higher_better_score(labels3)
-        if best_score < score3:
-            best_labels, best_score = labels3, score3
-
-            best_score = score1
-            best_labels = labels1
-            print('kmeans is better than agglomerative')
+        labels2 = cluster.agglomerative_strategy(n_clusters)
+        score2 = evaluator.score(labels2)
 
         # fourth select one sentence with each label
-        examples = self._get_examples(sentences, best_labels, n_clusters)
+        scores = [(score1, labels1), (score2, labels2)]
 
-        labels3, recommend_clusters = evaluator.get_best_n_clusters()
-        score3 = evaluator.higher_better_score(labels3)
-        if best_score < score3:
-            print('recommend %d sentences' % (recommend_clusters, ))
-        recommend_sentences = self._get_examples(sentences, labels3, recommend_clusters)
+        labels3, default_n_clusters = cluster.cluster_default()
+        if labels3:
+            score3 = evaluator.score(labels3)
+            scores.append((score3, labels3))
+            AppContext.cluster_sentences_rmd = self._get_examples(AppContext.cluster_sentences_succeed,
+                                                                  labels3, default_n_clusters)
+
+        best_score, AppContext.cluster_best_labels = max(scores, key=lambda v: v[0])
+        # if default DBSCAN cluster algorithm is best
+        if labels3 and AppContext.cluster_best_labels is labels3:
+            AppContext.cluster_sentences = AppContext.cluster_sentences_rmd
+        else:
+            AppContext.cluster_sentences = self._get_examples(AppContext.cluster_sentences_succeed,
+                                                              AppContext.cluster_best_labels, n_clusters)
 
         if no_n_input:
-            examples = recommend_sentences
+            if labels3:
+                AppContext.cluster_sentences = AppContext.cluster_sentences_rmd
+            else:
+                return False
 
-        return examples, recommend_sentences, sentences, best_labels
+        return True
 
-    def kwic(self, selword: str, sentence_with_pos: list):
+    @staticmethod
+    def kwic(sel_word: str, sentence_with_pos: List):
         """
-        :param: selword
+        :param: sel_word
         :param: sentenceWithPOS
 
         sentence_with_pos examples:
         [("NOUN", "bank", ["I go to the bank", "The house lies the right of the river bank"]),
         ("VERB", "bank", ["I banked in a slot"])
         """
-        # This is similar to sentenceWithPOS but processed after KWIC
         result = []
         for sentTuple in sentence_with_pos:
             sents_kwic = []
             result.append((sentTuple[0], sentTuple[1], sentTuple[2], sents_kwic))
-
             sents_origin = sentTuple[2]
             for sent in sents_origin:
-                # result_text = keywords_in_context(sent, [selword])
-                # Highlight Keywords
-                # result_text = find_and_replace(result_text, selword, "\x1b[34m" + selword + "\x1b[0m")
-                # sents_kwic.append(result_text)
-                window_words = get_keyword_window(selword, sent.split(" "))
-                result_text = kwic_show(window_words, selword)
+                result_text = kwic_show(sent.split(" "), sel_word, window_size=7)
                 if result_text:
-                    print(result_text)
                     sents_kwic.append(result_text)
+        AppContext.sentence_kwic = result
 
         return result
 
-    def _get_examples(self, sentences: List[str], best_labels, n_clusters: int):
-        tmp_labels, examples = [], []
-        for sent, label in zip(sentences, best_labels):
+    @staticmethod
+    def group_sentences():
+        sentences, labels = AppContext.cluster_sentences_succeed, AppContext.cluster_best_labels
+        if len(sentences) != len(labels):
+            log.warning('length of sentences %s not equaling labels %s' % (sentences, labels))
+            return None
+        return ClusterSentences.group_cluster_result(sentences, labels)
+
+    @staticmethod
+    def _get_examples(sentences: List[str], labels, n_clusters: int):
+        tmp_labels, examples, sentences_with_label = [], [], dict(zip(sentences, labels))
+        for sent, label in sentences_with_label.items():
             if label not in tmp_labels:
                 tmp_labels.append(label)
                 examples.append(sent)
@@ -237,29 +248,7 @@ class AppService(object):
                     examples.append(sent)
                 if len(examples) >= n_clusters:
                     break
+
+        # group examples according to labels
+        examples = sorted(examples, key=lambda sentence: sentences_with_label[sentence])
         return examples
-
-
-class AppContext(object):
-    sel_language = None
-    sel_word = None
-    sel_result_kwic = None
-
-
-if __name__ == "__main__":
-    # get word vector for one sentence
-    language_name = 'English'
-    sentences = [
-        'Tohru shows great loyalty to whoever he stands by, even back to the time when he was an Enforcer for the Dark Hand.',
-        'The Earth Demon, Dai Gui resembles a large minotaur(with the face of a guardian lion) with great strength.',
-        'Al Mulock was the great-grandson of Sir William Mulock(1843–1944), the former Canadian Postmaster - General.',
-        'Though his surviving images are scarce, his importance to the early history of photography in Asia is great.']
-
-    # first loading udpipe to segement word for each sentence
-    udt_english = UdpipeTrain(language_list[1],
-                              r'C:\Users\haris\Desktop\wordFinder\english-ewt-ud-2.5-191206.udpipe',
-                              r'C:\Users\haris\Desktop\wordFinder\haris.txt')
-
-    cluster_result = AppService().config_udpipe(language_name).cluster_sentences(language_name, sentences, 2)
-    print("two examples sentences: \n")
-    print(cluster_result)

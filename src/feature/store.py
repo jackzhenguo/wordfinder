@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@file: store_model.py
-@desc: This module is mainly used to store our train result to database
+@file: store.py
+@desc: This module is mainly used to store our feature result to database
 at present this module supports storing for multiple languages.
 use and refer interfaces between mysql and python by
 https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html
@@ -13,8 +13,11 @@ pymysql is the library for us to use between python and mysql
 from __future__ import print_function
 import pymysql
 from typing import List
-from src.train.result_model import TResult
-from src.util import db_config, language_dict
+from src.feature.pos import TResult
+from src.config import db_config, language_dict
+from src.logs import Log
+
+log = Log()
 
 
 class StoreData(object):
@@ -50,8 +53,8 @@ class StoreData(object):
                                            password=self.DB_PWD,
                                            host=self.DB_HOST)
         except pymysql.connect.Error as err:
-            print(err)
-        print('connection succeed!')
+            log.error(err)
+        log.info('connection succeed!')
         return self.cnx
 
     def create_database(self, cursor):
@@ -65,9 +68,9 @@ class StoreData(object):
                 self.DB_NAME = db_config['db_name']
             cursor.execute(
                 "CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARACTER SET 'utf8'".format(self.DB_NAME))
-            print('database %s creation succeed' % self.DB_NAME)
+            log.info('database %s creation succeed' % self.DB_NAME)
         except pymysql.connect.Error as err:
-            print("Failed creating database: {}".format(err))
+            log.error("Failed creating database: {}".format(err))
             exit(1)
 
     def create_tables(self, cursor, tables: dict, tables_sentences: dict):
@@ -75,25 +78,25 @@ class StoreData(object):
         try:
             cursor.execute("USE {}".format(self.DB_NAME))
         except pymysql.connect.Error as err:
-            print(err)
+            log.error(err)
 
         for table_name in tables:
             table_description = tables[table_name]
             try:
-                print("Creating table {}: \n".format(table_name), end='')
+                log.info("Creating table {}: \n".format(table_name), end='')
                 cursor.execute(table_description)
-                print('table %s creation succeed\n' % table_name)
+                log.info('table %s creation succeed\n' % table_name)
             except pymysql.connect.Error as err:
-                print("Error occured creating tables coz of {}".format(err))
+                log.error("Error occured creating tables coz of {}".format(err))
 
         for table_name in tables_sentences:
             table_description = tables_sentences[table_name]
             try:
-                print("Creating table {}: \n".format(table_name), end='')
+                log.info("Creating table {}: \n".format(table_name), end='')
                 cursor.execute(table_description)
-                print('table %s creation succeed\n' % table_name)
+                log.info('table %s creation succeed\n' % table_name)
             except pymysql.connect.Error as err:
-                print("Error occured creating tables coz of {}".format(err))
+                log.error("Error occured creating tables coz of {}".format(err))
 
         cursor.close()
 
@@ -119,11 +122,10 @@ class StoreData(object):
             data = [(row.word, row.pos_tag, insert_sentence_id) for row in rows]
             cursor.executemany(add_words, data)
             self.cnx.commit()
-            print('insert data succeed')
+            log.info('insert data succeed')
         except pymysql.connect.error as e:
             self.cnx.rollback()
-            # TODO: add log
-            print('insert error', e, rows)
+            log.error('insert error %s' % (e,))
 
     def select_data(self, cursor, word, language):
         """
@@ -145,7 +147,7 @@ class StoreData(object):
             rows = cursor.fetchall()
             return rows
         except pymysql.connect.error as err:
-            print("Query error due to {}".format(err))
+            log.error("Query error due to {}".format(err))
 
 
 if __name__ == '__main__':
@@ -181,4 +183,4 @@ if __name__ == '__main__':
     conn = store_data.db_connect()
     store_data.create_database(conn.cursor())
     store_data.create_tables(conn.cursor(), TABLES, TABLES_SENTENCES)
-    print('Done succeed~')
+    log.info('Done succeed~')

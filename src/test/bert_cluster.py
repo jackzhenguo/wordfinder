@@ -3,7 +3,7 @@ import nltk
 from nltk.cluster import KMeansClusterer
 import pandas as pd
 from typing import List
-from src.util import get_keyword_window
+from src.config import get_keyword_window
 
 
 def bert_en(select_word, sentences: List[str]):

@@ -16,7 +16,7 @@ import os
 def combine_json_to_txt(filepath, save_file_name):
     def read(file_path, file, wf):
         with open(file_path + '/' + file, encoding='utf-8') as f:
-            # each line in the file is a corpusdata page
+            # each line in the file is a corpusget page
             for line in f:
                 # read the line as valid json and select text field
                 text = json.loads(line)['text']
