@@ -137,7 +137,7 @@ class UdpipeTrain(ITrain):
         for i, one_sentence in enumerate(word_pos):
             sentence_text = self.extract_one_sentence(one_sentence)
             results = self.extract_one_word(one_sentence, sentence_text)
-            words.extend([res.word for res in results])
+            words.extend([res.word for res in results][1:])
         return words
 
 

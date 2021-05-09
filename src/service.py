@@ -65,6 +65,8 @@ class AppContext(object):
     cluster_best_labels: List = None
     # clustering succeed
     cluster_sentences_succeed: List = None
+    # cluster score
+    best_score = None
 
     # the connection object of the database
     db_conn = None
@@ -110,7 +112,9 @@ class AppService(object):
             AppContext.db_conn.commit()
         except Exception as e:
             log.error(e)
-
+        if AppContext.sel_result_source is None:
+            log.warning('language %s word %s not found in database' % (AppContext.sel_language, AppContext.sel_word))
+            return None
         # convert to data structure following
         # sel_result = (("sink", "NOUN", ["Don't just leave your dirty plates in the sink!"]),
         #                ("sink", "VERB", ["The wheels, started to sink into the mud.", "How could you sink so low?"]))
@@ -156,7 +160,7 @@ class AppService(object):
             # iterator to word
             # window_words = get_keyword_window(AppContext.sel_word, words, 5)
             window_words = get_keyword_window2(AppContext.sel_language, AppContext.sel_word, words, 5)
-            word_vectors = [word2vec_model.wv[word.lower()] for word in window_words if word in word2vec_model.wv]
+            word_vectors = [word2vec_model.wv[word.lower()] for word in window_words if word.lower() in word2vec_model.wv]
             to_array = np.array(word_vectors)
             if len(to_array) == 0:
                 failure_sentences.append(sent)
@@ -179,22 +183,23 @@ class AppService(object):
         scores = [(score1, labels1), (score2, labels2)]
 
         labels3, default_n_clusters = cluster.cluster_default()
-        if labels3:
+        if labels3 is not None:
             score3 = evaluator.score(labels3)
             scores.append((score3, labels3))
             AppContext.cluster_sentences_rmd = self._get_examples(AppContext.cluster_sentences_succeed,
                                                                   labels3, default_n_clusters)
 
-        best_score, AppContext.cluster_best_labels = max(scores, key=lambda v: v[0])
+        AppContext.best_score, AppContext.cluster_best_labels = max(scores, key=lambda v: v[0])
+
         # if default DBSCAN cluster algorithm is best
-        if labels3 and AppContext.cluster_best_labels is labels3:
+        if labels3 is not None and AppContext.cluster_best_labels is labels3:
             AppContext.cluster_sentences = AppContext.cluster_sentences_rmd
         else:
             AppContext.cluster_sentences = self._get_examples(AppContext.cluster_sentences_succeed,
                                                               AppContext.cluster_best_labels, n_clusters)
 
         if no_n_input:
-            if labels3:
+            if labels3 is not None:
                 AppContext.cluster_sentences = AppContext.cluster_sentences_rmd
             else:
                 return False
@@ -213,13 +218,22 @@ class AppService(object):
         """
         result = []
         for sentTuple in sentence_with_pos:
-            sents_kwic = []
-            result.append((sentTuple[0], sentTuple[1], sentTuple[2], sents_kwic))
+            sents_kwic, tmp_pre_kwic = [], []
             sents_origin = sentTuple[2]
             for sent in sents_origin:
-                result_text = kwic_show(sent.split(" "), sel_word, window_size=7)
+                words = AppContext.udt_pre_model.word_segmentation(sent)
+                result_text, pre_kwic = kwic_show(AppContext.sel_language, words, sel_word, window_size=9, token_space_param=2)
                 if result_text:
                     sents_kwic.append(result_text)
+                    tmp_pre_kwic.append(pre_kwic)
+
+            tmp_dict = dict(zip(sents_kwic, tmp_pre_kwic))
+            # first sort by size of words of pre part
+            sents_kwic_sorted = sorted(sents_kwic, key=lambda res: len(tmp_dict[res].strip().split(' ')))
+            # second sort by length of pre part
+            sents_kwic_sorted = sorted(sents_kwic_sorted, key=lambda res: len(''.join(tmp_dict[res].strip())))
+            result.append((sentTuple[0], sentTuple[1], sentTuple[2], sents_kwic_sorted))
+
         AppContext.sentence_kwic = result
 
         return result

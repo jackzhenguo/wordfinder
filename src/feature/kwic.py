@@ -23,9 +23,12 @@ def get_keyword_window2(language_name: str, sel_word: str, words_of_sentence: Li
     @return:
     """
     # remove numbers, special characters and stop words possible appearing in words_of_sentence
-    stop_words = stopwords.words(language_name)
+    try:
+        stop_words = stopwords.words(language_name)
+    except OSError as os:
+        stop_words = []
     if stop_words is None:
-        stop_words = None
+        stop_words = []
 
     words_of_sentence2 = [word for word in words_of_sentence if not re.match(r'[\d\W\-\_]+', word.lower())]
     words_of_sentence2 = [word for word in words_of_sentence2 if word.lower() not in stop_words]
@@ -78,8 +81,9 @@ def get_keyword_window(sel_word: str, words_of_sentence: List, length=5) -> List
         else words_of_sentence[index - length // 2 + 1: index + length // 2 + 1]
 
 
-def kwic_show(words_of_sentence, sel_word, window_size=9, align_param=70, token_space_param=1):
+def kwic_show(sel_language, words_of_sentence, sel_word, window_size=9, align_param=70, token_space_param=1):
     """return kwic string for words_of_sentence and sel_word being key token
+    :param sel_language: selected language
     :param words_of_sentence: all words in one sentence
     :param sel_word: key token
     :param window_size: size of kwic window
@@ -89,11 +93,11 @@ def kwic_show(words_of_sentence, sel_word, window_size=9, align_param=70, token_
     window_size and align_param's default value is not suggested to revise
     """
     if window_size < 1:
-        return sel_word
+        return None
     if window_size >= len(words_of_sentence):
         window_size = len(words_of_sentence)
 
-    words_in_window = get_keyword_window(sel_word, words_of_sentence, window_size)
+    words_in_window = get_keyword_window2(sel_language, sel_word, words_of_sentence, window_size)
 
     sent = ' '.join(words_in_window)
     # TODO: better to use token after lemmatization to sel_word
@@ -103,13 +107,13 @@ def kwic_show(words_of_sentence, sel_word, window_size=9, align_param=70, token_
         log.warning('%s not in sentence %s' % (sel_word, sent))
         key_index = -1
     if key_index == -1:
-        return sel_word
+        return None, None
 
-    align_param = align_param - len(sel_word)
+    align_param = align_param - len(sel_word) - 2 * token_space_param
     if align_param < 0:
         log.warning('align_param value required bigger length of input word')
-        return sel_word
-    pre_part = sent[:key_index]
+        return None, None
+    pre_part = sent[:key_index].rstrip()
     # dealing with the problem of too long string on the left side of keyword
     i, n_pre_words = 1, len(pre_part.split(' '))
     while i < n_pre_words and len(pre_part) > align_param // 2:
@@ -119,10 +123,10 @@ def kwic_show(words_of_sentence, sel_word, window_size=9, align_param=70, token_
         i += 1
 
     pre_kwic = pre_part.rjust(align_param // 2)
-    key_kwic = token_space_param * ' ' + sent[key_index: key_index + len(sel_word)] + token_space_param * ' '
+    key_kwic = token_space_param * ' ' + sent[key_index: key_index + len(sel_word)].lstrip() + token_space_param * ' '
 
     # dealing with the problem of too long string on the right side of keyword
-    post_kwic = sent[key_index + len(sel_word):]
+    post_kwic = sent[key_index + len(sel_word):].lstrip()
     n_post_words = len(post_kwic.split(' '))
     i = n_post_words - 1
     while i > 0 and len(post_kwic) > align_param // 2:
@@ -132,4 +136,4 @@ def kwic_show(words_of_sentence, sel_word, window_size=9, align_param=70, token_
         i -= 1
 
     sel_word_kwic = pre_kwic + key_kwic + post_kwic
-    return sel_word_kwic
+    return sel_word_kwic, pre_kwic
