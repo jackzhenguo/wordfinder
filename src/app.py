@@ -5,9 +5,14 @@
 @author: group3
 @time: 4/15/2021
 """
+import os
+import sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 from flask import Flask, render_template, request, flash
 import nltk
-import math
 from src.config import language_dict, word2vec_language
 from src.service import AppService, AppContext
 from src.logs import Log
