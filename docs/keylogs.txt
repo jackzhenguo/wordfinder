@@ -1,0 +1,3 @@
+2021-05-11 00:02:24,136 - root - ERROR - (2014, 'Command Out of Sync')
+2021-05-11 00:02:24,147 - root - ERROR - Protocol error, expecting EOF
+2021-05-11 00:02:24,192 - root - ERROR - unpack_from requires a buffer of at least 9 bytes for unpacking 8 bytes at offset 1 (actual buffer size is 5)

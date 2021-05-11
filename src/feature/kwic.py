@@ -104,7 +104,7 @@ def kwic_show(sel_language, words_of_sentence, sel_word, window_size=9, align_pa
     try:
         key_index = sent.lower().index(sel_word.lower())
     except ValueError as ve:
-        log.warning('%s not in sentence %s' % (sel_word, sent))
+        # log.warning('%s not in sentence %s' % (sel_word, sent))
         key_index = -1
     if key_index == -1:
         return None, None

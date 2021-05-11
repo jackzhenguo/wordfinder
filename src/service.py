@@ -110,6 +110,7 @@ class AppService(object):
             cursor.execute(sql_str, (sel_word,))
             AppContext.sel_result_source = cursor.fetchall()
             AppContext.db_conn.commit()
+            cursor.close()
         except Exception as e:
             log.error(e)
         if AppContext.sel_result_source is None:

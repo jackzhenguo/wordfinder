@@ -145,6 +145,7 @@ class StoreData(object):
                      "WHERE  word = %s") % (language, word)
             cursor.execute(query)
             rows = cursor.fetchall()
+            cursor.close()
             return rows
         except pymysql.connect.error as err:
             log.error("Query error due to {}".format(err))
