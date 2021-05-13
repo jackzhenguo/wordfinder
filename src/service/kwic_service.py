@@ -31,7 +31,6 @@ class KWICService(object):
         :@return: [('NOUN', 'bank', ['I go to the bank', 'The house lies the right of the river bank'], ['                             go  bank  ', '          house lie right river  bank  ']),
         ('VERB', 'bank', ['I banked in a slot'], ['                                 bank  slot'])]
         """
-
         result = []
         for sentTuple in sentences_with_pos:
             sents_kwic, tmp_pre_kwic = [], []

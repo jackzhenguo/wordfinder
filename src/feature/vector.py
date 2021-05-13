@@ -66,7 +66,7 @@ def load_model(word2vec_model_path) -> gensim.models.Word2Vec:
     try:
         filename = word2vec_model_path
         model = gensim.models.Word2Vec.load(filename)
-        log.info('word2vec model %s loads successfully' % (filename,))
+        # log.info('word2vec model %s loads successfully' % (filename,))
     except FileNotFoundError:
         log.error('word2vec model %s not found!' % (word2vec_model_path,))
         return None

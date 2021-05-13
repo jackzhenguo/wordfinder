@@ -38,7 +38,7 @@ def index():
     :return:index.html
     """
     try:
-        log.info('user ip is %s' % (request.remote_addr,))
+        log.info('ip %s visiting...' % (request.remote_addr,))
         return render_template('index.html')
     except Exception as e:
         log.error(e)
@@ -77,11 +77,15 @@ def find2():
 
 def finding_view(language_name):
     sel_word = request.form['selword']
+    log.info('user %s searching word %s in %s' % (request.remote_addr, sel_word, language_name))
     session['language_name'] = language_name
     session['sel_word'] = sel_word
 
     finds = FindWordService()
-    finds.find_word(language_name, sel_word)
+    succeed = finds.find_word(language_name, sel_word)
+    if not succeed:
+        flash("not found %s in %s corpus" % (sel_word, language_name))
+        return render_template("index.html")
     session['sel_word_pos_dict'] = finds.sel_word_pos_dict
     ks = KWICService(language_name)
     session['kwic_result'] = ks.kwic(sel_word, finds.sel_results)
@@ -103,8 +107,12 @@ def cluster():
         if request.method == 'POST':
             cluster_number = request.form['clusterNumber']
             sel_word_pos = request.form['tagInput1']
-
             cs = ClusterService(session['language_name'], session['sel_word'])
+            log.info("user %s clustering tag=%s, language=%s, word=%s, cluster_number=%s" % (request.remote_addr,
+                                                                                             sel_word_pos,
+                                                                                             session['language_name'],
+                                                                                             session['sel_word'],
+                                                                                             cluster_number))
             cluster_input_sentence = session['sel_word_pos_dict'][sel_word_pos]
             cluster_succeed = cs.cluster_service(cluster_input_sentence, cluster_number)
             if not cluster_succeed:

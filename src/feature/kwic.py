@@ -97,7 +97,7 @@ def kwic_show(sel_language, words_of_sentence, sel_word, window_size=9, align_pa
     if window_size >= len(words_of_sentence):
         window_size = len(words_of_sentence)
 
-    words_in_window = get_keyword_window2(sel_language, sel_word, words_of_sentence, window_size)
+    words_in_window = get_keyword_window(sel_word, words_of_sentence, window_size)
 
     sent = ' '.join(words_in_window)
     # TODO: better to use token after lemmatization to sel_word

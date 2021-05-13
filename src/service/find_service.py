@@ -40,7 +40,7 @@ class FindWordService(object):
         assign value to self.pos_dict and self.sel_result
         :param language_name:
         :param sel_word:
-        :return: None
+        :return: executing okay return True, orFalse
         """
         pos_column_index, sentence_column_index = 2, 6
 
@@ -56,9 +56,9 @@ class FindWordService(object):
             self.sel_result_source = cursor.fetchall()
             self.db_conn.commit()
             cursor.close()
-            if self.sel_result_source is None:
-                log.warning('language %s word %s not found in database' % (self.sel_language, self.sel_word))
-                return None
+            if self.sel_result_source is None or len(self.sel_result_source) == 0:
+                log.warning('word %s in %s not found in database' % (sel_word, language_name))
+                return False
             # convert to data structure following
             # sel_result = (("sink", "NOUN", ["Don't just leave your dirty plates in the sink!"]),
             #                ("sink", "VERB", ["The wheels, started to sink into the mud.", "How could you sink so low?"]))
@@ -68,5 +68,6 @@ class FindWordService(object):
                 if row[sentence_column_index] not in pos_sentences:
                     pos_sentences.append(row[sentence_column_index])
             self.sel_results = [(sel_word, k, self.sel_word_pos_dict[k]) for k in self.sel_word_pos_dict]
+            return True
         except Exception as e:
             log.error(e.args[0])
