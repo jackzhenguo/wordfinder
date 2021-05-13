@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-@file: kwic.py
+@file: kwic_service.py
 @desc: providing functions about KWIC presentation
 @author: group3
 @time: 5/9/2021
@@ -56,7 +56,7 @@ def get_keyword_window(sel_word: str, words_of_sentence: List, length=5) -> List
             break
 
     if index == -1:
-        log.warning("warning: cannot find %s in sentence: %s" % (sel_word, words_of_sentence))
+        # log.warning("warning: cannot find %s in sentence: %s" % (sel_word, words_of_sentence))
         return words_of_sentence
     # backward is not enough
     if index < length // 2:

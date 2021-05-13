@@ -16,7 +16,6 @@ from typing import List
 
 from src.feature.posbase import ITrain
 from src.feature.pos import TResult
-from src.feature.store import StoreData
 from src.config import language_list, db_config, corpus_language, udpipe_language
 from src.logs import Log
 
@@ -24,24 +23,17 @@ log = Log()
 
 
 class UdpipeTrain(ITrain):
-    def __init__(self, language_name, pre_model_name, our_corpus_name, db_conn=None):
+    def __init__(self, language_name, pre_model_name, our_corpus_name):
         """
         The language of pre_model_name and our_corpus_name should be identical!
         :param language_name:
         :param pre_model_name: it's from udpipe
         :param our_corpus_name: it's our found
-        :@param db_conn: database connection
         """
         self.language_name = language_name
         self.pre_model_name = pre_model_name
         self.our_corpus_name = our_corpus_name
         try:
-            if db_conn is None:
-                self.store_data = StoreData(db_config['user'],
-                                            db_config['password'],
-                                            db_host=db_config['db_host'],
-                                            db_name=db_config['db_name'])
-                self.cursor = self.store_data.db_connect().cursor()
             # second loading udpipe pre-feature model
             self.model = Model(self.pre_model_name)
             self._word_count, self.MAX_WORD_COUNT = 0, 500000
@@ -70,7 +62,7 @@ class UdpipeTrain(ITrain):
                                   r"\'\:\"\,\.\/\<\>\?\/\*\+"u"]+").sub('', data)
         return cleaned_data
 
-    def do_train(self) -> List[TResult]:
+    def do_train(self, db_store) -> List[TResult]:
         """
         By pre-feature modules of unpipe get the results for our corpus
         These udpipe modules can be download here:
@@ -89,7 +81,7 @@ class UdpipeTrain(ITrain):
             for i, one_sentence in enumerate(word_pos):
                 sentence_text = self.extract_one_sentence(one_sentence)
                 results = self.extract_one_word(one_sentence, sentence_text)
-                self.store_data.insert_data(self.cursor, results, self.language_name)
+                db_store.insert_data(results, self.language_name)
                 print('line %d, batch %d for %s written succeed' % (line_no, i, self.language_name))
             line_no += 1
         log.info(' all written succeed for corpus of %s' % self.our_corpus_name)
@@ -99,7 +91,7 @@ class UdpipeTrain(ITrain):
        This private method is mainly used to extract the sentence text.
        an instance of udpipe Sentence:
        :param sentence: udpipe Sentence
-       :return: str 黄土高原
+       :return: str
        """
         comment = ''.join(sentence.comments)
         try:

@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-@file: clusters.py
+@file: cluster_service.py
 @desc: This module is to evaluate cluster result
 mainly based on an assumption that we don't know the
 true labels of clusters.

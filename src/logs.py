@@ -9,6 +9,7 @@
 import logging
 import time
 import os
+import traceback
 
 
 class Log:
@@ -47,7 +48,8 @@ class Log:
         elif level == 'warning':
             logger.warning(message)
         elif level == 'error':
-            logger.error(message)
+            whole_trace_stack = traceback.format_exc()
+            logger.error(str(message) + "\n" + whole_trace_stack)
         # remove handler after logging
         logger.removeHandler(ch)
         logger.removeHandler(fh)

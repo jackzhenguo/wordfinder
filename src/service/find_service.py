@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-@file: findword_service.py
+@file: find_service.py
 @desc:
 @author: group3
 @time: 2021/5/12
@@ -45,9 +45,11 @@ class FindWordService(object):
         pos_column_index, sentence_column_index = 2, 6
 
         # select
-        sql_str = "select * from " + language_name + "_wordpos as w left join " + language_name + "_sentences as s on " \
-                                                                                                  "w.sentence = s.id " \
-                                                                                                  "where w.word = %s "
+        sql_str = "select * from " + language_name + \
+                  "_wordpos as w left join " + language_name + \
+                  "_sentences as s on " \
+                  "w.sentence = s.id " \
+                  "where w.word = %s "
         try:
             cursor = self.db_conn.cursor()
             cursor.execute(sql_str, (sel_word,))
