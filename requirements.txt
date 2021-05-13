@@ -1,5 +1,5 @@
 gensim==3.8.3
-transformers==4.0.0
+transformers~=2.8.0
 torch==1.7.1
 nltk==3.6.2
 pandas==1.2.4
@@ -7,5 +7,8 @@ en_trf_bertbaseuncased_lg==2.3.0
 Flask==1.1.2
 numpy==1.19.2
 PyMySQL==1.0.2
-corpy==0.3.1
+corpy~=0.3.0
 scikit_learn==0.24.2
+
+scikit-learn~=0.24.1
+jsonpickle~=2.0.0
