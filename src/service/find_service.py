@@ -49,7 +49,7 @@ class FindWordService(object):
                   "_wordpos as w left join " + language_name + \
                   "_sentences as s on " \
                   "w.sentence = s.id " \
-                  "where w.word = %s "
+                  "where w.word = %s limit 30"
         try:
             cursor = self.db_conn.cursor()
             cursor.execute(sql_str, (sel_word,))

@@ -71,11 +71,12 @@ def find():
             session['sel_word_pos_dict'] = finds.sel_word_pos_dict
             ks = KWICService(language_name)
             session['kwic_result'] = ks.kwic(sel_word, finds.sel_results)
+            light_kwic_result = [(item[0], item[1], item[3]) for item in session['kwic_result']]
             # return json.dumps(session['kwic_result'])
             return render_template('index.html', input_data={"language_id": language_id,
                                                              "language_name": language_name,
                                                              "sel_word": sel_word,
-                                                             "sel_result": session['kwic_result']})
+                                                             "sel_result": light_kwic_result})
     except Exception as e:
         log.error(e)
         return render_template('404.html')
