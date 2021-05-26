@@ -7,14 +7,14 @@
       <div class="col-md-8">
         <div class="form-group">
              <div class="alert alert-dismissible alert-light my-sm-2">
-                 You select the number of cluster is <strong>{{cluster_number}}</strong>
+                 cluster count is <strong>{{cluster_number}}</strong>
              </div>
             <br /><br />
             <div class="alert alert-dismissible alert-light">
                 <div class="alert alert-dismissible alert-success">
                       <strong>Well done!</strong>  You successfully cluster {{cluster_number}} example
                     {% if cluster_number | int  > 1 %}
-                    sentences
+                    sentences(examples sentences refer to representative sentences from results)
                     {% else %}
                     sentence
                     {% endif %}
@@ -35,7 +35,7 @@
 
                 <div class="form-group">
                     {% if rec_cluster_result %}
-                    <label id = "clusterLabelId2">Recommending example
+                    <label id = "clusterLabelId2">Recommended example
                         {% if cluster_number | int  > 1 %}
                         sentences
                         {% else %}
@@ -85,7 +85,7 @@
                         {% endif %}
                     </ul>
                   <br/> <br/>
-                    <input class="btn btn-primary" type="button" value="return to previous page" onclick="goBack()">
+                    <input class="btn btn-primary" type="button" value="previous page" onclick="goBack()">
                 </div>
 
             </div>

@@ -5,9 +5,9 @@
 @author: group3
 @time: 4/15/2021
 """
+import json
 import os
 import sys
-
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -45,7 +45,7 @@ def index():
         return render_template('404.html')
 
 
-@app.route('/find', methods=['POST'])
+@app.route('/find', methods=['GET'])
 def find():
     """
     This method mainly processes the '/find' request
@@ -55,43 +55,30 @@ def find():
     :return: result.html
     """
     try:
-        if request.method == 'POST':
-            language_id = request.form['sellanguage']
+        if request.method == 'GET':
+            language_id = request.args['sellanguage']
             language_name = language_dict[language_id]
-            return finding_view(language_name)
+            sel_word = request.args['selword']
+            log.info('user %s searching word %s in %s' % (request.remote_addr, sel_word, language_name))
+            session['language_name'] = language_name
+            session['sel_word'] = sel_word
+
+            finds = FindWordService()
+            succeed = finds.find_word(language_name, sel_word)
+            if not succeed:
+                flash("not found %s in %s corpus" % (sel_word, language_name))
+                return render_template("index.html")
+            session['sel_word_pos_dict'] = finds.sel_word_pos_dict
+            ks = KWICService(language_name)
+            session['kwic_result'] = ks.kwic(sel_word, finds.sel_results)
+            # return json.dumps(session['kwic_result'])
+            return render_template('index.html', input_data={"language_id": language_id,
+                                                             "language_name": language_name,
+                                                             "sel_word": sel_word,
+                                                             "sel_result": session['kwic_result']})
     except Exception as e:
         log.error(e)
         return render_template('404.html')
-
-
-@app.route('/find2', methods=['POST'])
-def find2():
-    try:
-        if request.method == 'POST':
-            language_name = request.form['sellanguage']
-            return finding_view(language_name)
-    except Exception as e:
-        log.error(e)
-        return render_template('404.html')
-
-
-def finding_view(language_name):
-    sel_word = request.form['selword']
-    log.info('user %s searching word %s in %s' % (request.remote_addr, sel_word, language_name))
-    session['language_name'] = language_name
-    session['sel_word'] = sel_word
-
-    finds = FindWordService()
-    succeed = finds.find_word(language_name, sel_word)
-    if not succeed:
-        flash("not found %s in %s corpus" % (sel_word, language_name))
-        return render_template("index.html")
-    session['sel_word_pos_dict'] = finds.sel_word_pos_dict
-    ks = KWICService(language_name)
-    session['kwic_result'] = ks.kwic(sel_word, finds.sel_results)
-    return render_template('result.html', input_data={"language_name": language_name,
-                                                      "sel_word": sel_word,
-                                                      "sel_result": session['kwic_result']})
 
 
 @app.route('/cluster', methods=['POST'])
